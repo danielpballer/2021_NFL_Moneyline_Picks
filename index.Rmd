@@ -1,0 +1,1426 @@
+---
+title: "2021 NFL Moneyline Picks"
+output: 
+  flexdashboard::flex_dashboard:
+    theme:
+      version: 4
+      bootswatch: solar
+    orientation: rows
+    vertical_layout: fill
+    social: ["menu"]
+    source_code: embed
+    navbar:
+      - { title: "Created by: Daniel Baller", icon: "fa-github", href: "https://github.com/danielpballer"  }
+---
+
+
+```{r setup, include=FALSE}
+#    source_code: embed
+library(flexdashboard)
+library(tidyverse)
+library(data.table)
+library(formattable)
+library(ggpubr)
+library(ggrepel)
+library(gt)
+library(glue)
+library(ggthemes)
+library(hrbrthemes)
+library(sparkline)
+library(plotly)
+library(htmlwidgets)
+source("./Functions/functions2.R")
+
+thematic::thematic_rmd(font = "auto")
+```
+
+```{r Reading in our picks files, include=FALSE}
+week_1 = read_csv("./CSV_Data_Files/2021 NFL Week 1.csv")
+# week_2 = read_csv("./CSV_Data_Files/2021 NFL Week 2.csv")
+# week_3 = read_csv("./CSV_Data_Files/2021 NFL Week 3.csv")
+# week_4 = read_csv("./CSV_Data_Files/2021 NFL Week 4.csv")
+# week_5 = read_csv("./CSV_Data_Files/2021 NFL Week 5.csv")
+# week_6 = read_csv("./CSV_Data_Files/2021 NFL Week 6.csv")
+# week_7 = read_csv("./CSV_Data_Files/2021 NFL Week 7.csv")
+# week_8 = read_csv("./CSV_Data_Files/2021 NFL Week 8.csv")
+# week_9 = read_csv("./CSV_Data_Files/2021 NFL Week 9.csv")
+# week_10 = read_csv("./CSV_Data_Files/2021 NFL Week 10.csv")
+# week_11 = read_csv("./CSV_Data_Files/2021 NFL Week 11.csv")
+# week_12 = read_csv("./CSV_Data_Files/2021 NFL Week 12.csv")
+# week_13 = read_csv("./CSV_Data_Files/2021 NFL Week 13.csv")
+# week_14 = read_csv("./CSV_Data_Files/2021 NFL Week 14.csv")
+# week_15 = read_csv("./CSV_Data_Files/2021 NFL Week 15.csv")
+# week_16 = read_csv("./CSV_Data_Files/2021 NFL Week 16.csv")
+# week_17 = read_csv("./CSV_Data_Files/2021 NFL Week 17.csv")
+cadet_wk1 = read_csv("./CSV_Data_Files/2021 NFL Week 1 MA376.csv")
+# cadet_wk2 = read_csv("./CSV_Data_Files/2021 NFL Week 2 MA376.csv")
+# cadet_wk3 = read_csv("./CSV_Data_Files/2021 NFL Week 3 MA376.csv")
+# cadet_wk4 = read_csv("./CSV_Data_Files/2021 NFL Week 4 MA376.csv")
+# cadet_wk5 = read_csv("./CSV_Data_Files/2021 NFL Week 5 MA376.csv")
+# cadet_wk6 = read_csv("./CSV_Data_Files/2021 NFL Week 6 MA376.csv")
+# cadet_wk7 = read_csv("./CSV_Data_Files/2021 NFL Week 7 MA376.csv")
+# cadet_wk8 = read_csv("./CSV_Data_Files/2021 NFL Week 8 MA376.csv")
+# cadet_wk9 = read_csv("./CSV_Data_Files/2021 NFL Week 9 MA376.csv")
+# cadet_wk10 = read_csv("./CSV_Data_Files/2021 NFL Week 10 MA376.csv")
+# cadet_wk11 = read_csv("./CSV_Data_Files/2021 NFL Week 11 MA376.csv")
+# cadet_wk12 = read_csv("./CSV_Data_Files/2021 NFL Week 12 MA376.csv")
+# cadet_wk13 = read_csv("./CSV_Data_Files/2021 NFL Week 13 MA376.csv")
+# cadet_wk14 = read_csv("./CSV_Data_Files/2021 NFL Week 14 MA376.csv")
+# cadet_wk15 = read_csv("./CSV_Data_Files/2021 NFL Week 15 MA376.csv")
+# cadet_wk16 = read_csv("./CSV_Data_Files/2021 NFL Week 16 MA376.csv")
+# cadet_wk17 = read_csv("./CSV_Data_Files/2021 NFL Week 17 MA376.csv")
+
+
+####################UPDATE THESE###############################
+current_week = 1 #Set what week it is
+inst.picks = list(week_1) #add in the additional weeks
+cdt.picks = list(cadet_wk1) #add in the additional weeks
+####################END OF UPDATE##############################
+
+weeks = as.list(seq(1:current_week)) #creating a list of each week number
+
+```
+
+```{r read in scores clean data, include=FALSE}
+#current_week = as.numeric(length(weeks))
+Scores = read_csv(glue::glue("./CSV_Data_Files/NFL_Scores_{current_week}.csv")) #%>% janitor::clean_names()
+cbs = read_csv(glue::glue("./CSV_Data_Files/CBS_Experts_{current_week}.csv"))
+cbs_season = read_csv(glue::glue("./CSV_Data_Files/CBS_Experts_Season_{current_week}.csv"))
+espn = read_csv(glue::glue("./CSV_Data_Files/ESPN_Experts_{current_week}.csv"))
+espn_season = read_csv(glue::glue("./CSV_Data_Files/ESPN_Experts_Season_{current_week}.csv"))
+
+#Cleaning the data and getting a total list of winners
+Scores = cleaning2(Scores)
+
+#creating a list of winners for each week
+winners = map(weeks, weekly_winners)
+
+#creating a vector of this weeks winners
+this_week = pull(winners[[length(winners)]])  
+
+#Getting the number of games for each week
+weekly_number_of_games = map_dbl(weeks, week_number_games)
+```
+
+```{r Group Predictions, include=FALSE}
+#Creating the list of everyones predictions each week.
+games = map(inst.picks, games_fn)
+
+#Creating the prediction table.  
+pred_table = map(games, pred_table_fn)
+
+#Adding who won to the predictions
+with_winners = map2(pred_table, winners, adding_winners)
+
+#Creating results for each week.
+results = map2(with_winners,weekly_number_of_games, results_fn)
+```
+
+```{r Displaying Group Results, echo=FALSE}
+#Displaying the group results
+
+inst_group_table = results[[length(results)]] %>% gt() %>% 
+  cols_align(
+    align = "center") %>% 
+   tab_header(
+    title = md("This Week's Predictions"),
+    subtitle = md(glue("Week {length(results)}"))
+    ) %>% 
+   tab_style(
+    style = cell_text(color = "red", weight = "bold"),
+    locations = cells_body(
+      columns = c(Correct),
+      rows = Correct =="No"
+    )) %>% 
+   tab_style(
+    style = cell_text(color = "green", weight = "bold"),
+    locations = cells_body(
+      columns = c(Correct),
+      rows = Correct =="Yes"
+    )) %>% 
+  tab_options(
+    data_row.padding = px(3),
+    container.height = "100%"
+   )
+```
+
+```{r Weekly and season Group Results, include=FALSE}
+# Printing the weekly and season win percentage     
+
+#how many games correct, incorrect, and not picked each week
+weekly_group_correct = map(results, weekly_group_correct_fn)  
+
+#how many games were picked each week
+weekly_games_picked = map2(weekly_group_correct, weekly_number_of_games, weekly_games_picked_fn)
+
+#Calculating the number of correct picks for each week
+weekly_group_correct_picks = map(weekly_group_correct, weekly_group_correct_picks_fn)
+
+#Calculating weekly win percentage
+weekly_win_percentage = map2(weekly_group_correct_picks, weekly_games_picked, weekly_win_percentage_fn)
+
+#Calculating season win percentage
+season_win_percentage = round(sum(unlist(weekly_group_correct_picks))/sum(unlist(weekly_games_picked)),4)
+
+#Calculating number of games picked this season
+season_games = sum(unlist(weekly_games_picked))
+
+#calculating season wins
+season_wins = sum(unlist(weekly_group_correct_picks))
+
+#calculating the number of people who picked this week
+Total = dim(inst.picks[[length(weeks)]])[1]
+```
+
+```{r plotting group results, include=FALSE}
+#Previous Weeks
+group_season_for_plotting = unlist(weekly_win_percentage) %>% as.data.frame() %>% 
+  rename(`Win Percentage` = ".") %>% 
+  add_column(Week = unlist(weeks))
+```
+
+```{r Plotting the group results, echo=FALSE}
+inst_group_season_plot = group_season_for_plotting %>% 
+ggplot(aes(x = as.factor(Week), y = `Win Percentage`))+
+  geom_point()+
+  geom_path(aes(x = Week))+
+  #geom_text(aes(label=`Win Percentage`),hjust=.5, vjust=-1.5)+
+  ylim(c(0, 1)) +
+  xlab("NFL Week") + 
+  ylab("Correct Percentage")+
+  ggtitle("Weekly Group Correct Percentage")+
+  theme_classic()+
+  theme(plot.title = element_text(hjust = 0.5, size = 18))
+```
+
+```{r instructor beating cbs week, include=FALSE}
+#Creating a list of correct percentages for each week.
+cbs_weekly_percent = map(weeks, cbs_percent)
+
+#Creating a list of how many cbs experts we beat each week.
+cbs_experts_beat = map2(cbs_weekly_percent, weekly_win_percentage, experts_beat)
+
+#Creating a list of how many cbs experts picked each week.  
+cbs_experts_total = map(cbs_weekly_percent, experts_tot)
+```
+
+```{r instructor beating cbs season, include=FALSE}
+#Creating a list of correct percentages for each week.
+cbs_season_percent = map(weeks, cbs_season_percent)
+
+#Creating a list of how many cbs experts we beat each week.
+cbs_experts_beat_season = map2(cbs_season_percent, season_win_percentage, experts_beat)
+
+#Creating a list of how many cbs experts picked each week.  
+cbs_experts_season_total = map(cbs_season_percent, experts_tot)
+```
+
+```{r instructor beating ESPN week, include=FALSE}
+#Creating a list of correct percentages for each week.
+espn_weekly_percent = map(weeks, espn_percent)
+
+#Creating a list of how many cbs experts we beat each week.
+espn_experts_beat = map2(espn_weekly_percent, weekly_win_percentage, experts_beat)
+
+#Creating a list of how many cbs experts picked each week.  
+espn_experts_total = map(espn_weekly_percent, experts_tot)
+```
+
+```{r instructor beating ESPN season, include=FALSE}
+#Creating a list of correct percentages for each week.
+espn_season_percent = map(weeks, espn_season_percent)
+
+#Creating a list of how many cbs experts we beat each week.
+espn_experts_beat_season = map2(espn_season_percent, season_win_percentage, experts_beat)
+
+#Creating a list of how many cbs experts picked each week.  
+espn_experts_season_total = map(espn_season_percent, experts_tot)
+```
+
+```{r individual results, include=FALSE}
+#Creating a list of individual results for each week.
+weekly_indiv = pmap(list(inst.picks, winners, weeks), indiv_weekly_pred)
+
+#Combining each week into one dataframe and calculating percentage Correct for this week.  
+full_season = weekly_indiv %>% reduce(full_join, by = "Name") %>% 
+  mutate(Percent = round(pull(.[,ncol(.)]/weekly_games_picked[[length(weekly_games_picked)]]),4)) 
+
+#Creating a dataframe with only the weekly picks
+a = full_season %>% select(starts_with("Week"))
+
+#Creating a vector of how many weeks each person picked over the season
+tot_week = NULL
+help = NULL
+for (i in 1:dim(a)[1]){
+  for(j in 1:length(a)){
+    help[j] = ifelse(is.na(a[i,j])==T,0,1)
+    tot_week[i] = sum(help)
+  }
+}
+
+#Creating a vector of how many games each person picked over the season
+tot_picks= NULL
+help = NULL
+for (i in 1:dim(a)[1]){
+  for(j in 1:length(a)){
+    help[j] = unlist(weekly_games_picked)[j]*ifelse(is.na(a[i,j])==T,0,1)
+    tot_picks[i] = sum(help)
+  }
+}
+
+#Creatign a vector of how many games each person picked correct over the season
+tot_correct = NULL
+help = NULL
+for (i in 1:dim(a)[1]){
+  tot_correct[i] = sum(a[i,], na.rm = T)
+}
+
+#adding how many weeks each person picked, season correct percentage, and adjusted season percentag to the data frame and sorting the data
+indiv_disp = full_season %>% add_column(`Weeks Picked` = tot_week) %>%
+  add_column(tot_correct)%>%
+  add_column(tot_picks)%>%
+  mutate(`Season Percent` = round(tot_correct/tot_picks,4))%>%
+  mutate(`Adj Season Percent` = round(`Season Percent`*(tot_week/length(a)),4)) %>%
+  select(-tot_correct, -tot_picks) %>%
+  arrange(desc(Percent), desc(`Season Percent`)) %>%
+  mutate(Percent = ifelse(is.na(Percent)==T, 0, Percent))
+```
+
+```{r individual percentages, include=FALSE}
+#Calculating individual percentages for each week.
+weekly_indiv_percent = map2(weekly_indiv, weekly_games_picked, indiv_percent) %>% reduce(full_join, by = "Name")
+
+weekly_indiv_percent_plot = weekly_indiv_percent %>% 
+  pivot_longer(cols = starts_with("Week"), names_to = "Week", values_to = "Percent")%>%
+  mutate(Percent = ifelse(is.na(Percent)==T, 0, Percent)) %>% 
+  mutate(Week = as.factor(Week))
+
+levels = NULL
+for(i in 1:length(weeks)){
+  levels[i] = glue("Week {i}")  
+}
+
+weekly_indiv_percent_plot = weekly_indiv_percent_plot %>%
+  mutate(Week = factor(Week, levels))
+```
+
+```{r sparklines, include=FALSE}
+#adding sparklines
+plot_group = function(name, df){
+  plot_object = 
+    ggplot(data = df,
+           aes(x = as.factor(Week), y=Percent, group = 1))+
+    geom_path(size = 7)+
+    scale_y_continuous(limits = c(0,1))+
+    theme_void()+
+    theme(legend.position = "none")
+  return(plot_object)
+}
+
+sparklines = 
+  weekly_indiv_percent_plot %>% 
+  group_by(Name) %>% 
+  nest() %>% 
+  mutate(plot = map2(Name, data, plot_group)) %>% 
+  select(-data)
+  
+indiv_disp_2 = indiv_disp %>% 
+  inner_join(sparklines, by = "Name") %>% 
+  mutate(`Season Trend` = NA)
+```
+
+```{r Printing Individual Table2, echo=FALSE}
+# Printing the individual Table
+indiv_table = indiv_disp_2 %>% gt() %>% 
+  cols_align(
+    align = "center") %>% 
+   tab_header(
+    title = md("Individual Results"),
+    subtitle = md(glue("Week {length(weeks)}"))
+    ) %>% 
+   tab_style(
+    style = cell_text(color = "red", weight = "bold"),
+    locations = cells_body(
+      columns = c(Percent),
+      rows = Percent<.5
+    )) %>% 
+   tab_style(
+    style = cell_text(color = "green", weight = "bold"),
+    locations = cells_body(
+      columns = c(Percent),
+      rows = Percent>.5
+    )) %>% 
+     tab_style(
+    style = cell_text(color = "red", weight = "bold"),
+    locations = cells_body(
+      columns = c(`Season Percent`),
+      rows = `Season Percent`<.5
+    )) %>% 
+   tab_style(
+    style = cell_text(color = "green", weight = "bold"),
+    locations = cells_body(
+      columns = c(`Season Percent`),
+      rows = `Season Percent`>.5
+    ))%>% 
+     tab_style(
+    style = cell_text(color = "red", weight = "bold"),
+    locations = cells_body(
+      columns = c(`Adj Season Percent`),
+      rows = `Adj Season Percent`<.5
+    )) %>% 
+   tab_style(
+    style = cell_text(color = "green", weight = "bold"),
+    locations = cells_body(
+      columns = c(`Adj Season Percent`),
+      rows = `Adj Season Percent`>.5
+    )) %>% 
+  tab_options(
+    container.width = pct(100),
+    data_row.padding = px(1),
+    container.height = "100%"
+   ) %>%
+    tab_spanner(
+    label = "Weekly # Correct",
+    columns = starts_with(c("Week "))
+  ) %>% 
+  text_transform(
+    locations = cells_body(c(`Season Trend`)),
+    fn = function(x){
+      map(indiv_disp_2$plot, ggplot_image, height = px(30), aspect_ratio = 4)
+                 }) %>%
+  cols_hide(c(plot))
+
+indiv_winners = indiv_disp_2 %>% filter(Percent == max(Percent)) %>% select(Name) %>% pull() %>% paste(collapse = ", ")
+indiv_season = indiv_disp_2 %>% filter(`Season Percent` == max(`Season Percent`)) %>% select(Name) %>% pull() %>% paste(collapse = ", ")
+indiv_season_adj = indiv_disp_2 %>% filter(`Adj Season Percent` == max(`Adj Season Percent`)) %>% select(Name) %>% pull()%>% paste(collapse = ", ")
+```
+
+```{r instructor formattable, echo=FALSE}
+improvement_formatter <- 
+  formatter("span", 
+            style = x ~ formattable::style(
+              font.weight = "bold", 
+              color = ifelse(x > .5, "green", ifelse(x < .5, "red", "black"))),
+             x ~ icontext(ifelse(x == max(x), "star", ""), x))
+
+indiv_disp_3 = indiv_disp_2 %>% select(-plot)
+indiv_disp_3$`Season Trend` = apply(indiv_disp_3[,2:(1+length(weeks))], 1, FUN = function(x) as.character(htmltools::as.tags(sparkline(as.numeric(x), type = "line", chartRangeMin = 0, chartRangeMax = 1, fillColor = "white"))))
+
+indiv_table_2 = as.htmlwidget(formattable(indiv_disp_3, 
+                                align = c("l", rep("c", NROW(indiv_disp_3)-1)),
+              list(`Season Percent` = color_bar("#FA614B"),
+              `Season Percent`= improvement_formatter,
+              `Adj Season Percent`= improvement_formatter)))
+              
+indiv_table_2$dependencies = c(indiv_table_2$dependencies, htmlwidgets:::widget_dependencies("sparkline", "sparkline"))
+```
+
+```{r Plotting individual results over the season2, echo=FALSE, out.width = "100%"}
+#Creating the individual plot.  
+inst_indiv_plots = weekly_indiv_percent_plot %>% 
+  ggplot(aes(x = factor(Week), y = Percent, color = Name))+
+  geom_point()+
+  geom_path(aes(x = as.factor(Week), y = Percent, color = Name, 
+                group = Name))+
+  geom_text_repel(aes(label=round(Percent,3)),hjust=0.5, vjust=2, size = 3)+
+  ylim(c(0, 1)) +
+  labs(x = "NFL Week", 
+       y = "Correct Percentage", 
+       title = "Weekly Individual Correct Percentage")+
+  facet_wrap(~Name)+
+  theme_classic()+
+  theme(legend.position = "none",
+        plot.title = element_text(hjust = 0.5, size = 18),
+        axis.text.x=element_text(angle =45, vjust = 1, hjust = 1))
+```
+
+<!--
+```{r Plotting individual results over the season, include=FALSE, out.width="100%"}
+#Creating the individual plot.  
+indiv_plot_comb = weekly_indiv_percent %>% 
+  pivot_longer(cols = starts_with("Week"), names_to = "Week", values_to = "Percent") %>% 
+  mutate(Percent = ifelse(is.na(Percent)==T, 0, Percent)) %>% 
+  #group_by(Name) %>% 
+  ggplot(aes(x = as.factor(Week), y = Percent, color = Name))+
+  geom_point()+
+  geom_line(aes(x = as.factor(Week), y = Percent, color = Name, 
+                group = Name))+
+  #geom_text_repel(aes(label=Name),hjust=0, vjust=0, size = 3)+
+  #geom_text(aes(label=Percent),hjust=.5, vjust=-1.5)+
+  ylim(c(0, 1)) +
+  labs(x = "NFL Week", 
+       y = "Correct Percentage", 
+       title = "Weekly Individual Correct Percentage")+
+  theme_classic()+
+  theme(#legend.position = "none",
+        plot.title = element_text(hjust = 0.5, size = 18))
+```
+-->
+
+```{r Cadet Group Predictions, include=FALSE}
+### Cadet Group Predictions
+
+#Creating the list of everyones predictions each week.
+c_games = map(cdt.picks, games_fn)
+
+#Creating the prediction table.  
+c_pred_table = map(c_games, pred_table_fn)
+
+#Adding who won to the predictions
+c_with_winners = map2(c_pred_table, winners, adding_winners)
+
+#Creating results for each week.
+c_results = map2(c_with_winners,weekly_number_of_games, c_results_fn)
+```
+
+```{r Printing Cadet Group Prediction Table, echo=FALSE}
+#Displaying the group results
+c_group_table = c_results[[length(c_results)]] %>% 
+  gt() %>% 
+  cols_align(
+    align = "center") %>% 
+   tab_header(
+    title = md("This Week's MA376 Predictions"),
+    subtitle = md(glue("Week {length(results)}"))
+    ) %>% 
+   tab_style(
+    style = cell_text(color = "red", weight = "bold"),
+    locations = cells_body(
+      columns = c(Correct),
+      rows = Correct =="No"
+    )) %>% 
+   tab_style(
+    style = cell_text(color = "green", weight = "bold"),
+    locations = cells_body(
+      columns = c(Correct),
+      rows = Correct =="Yes"
+    ))%>% 
+  tab_options(
+    data_row.padding = px(3),
+    container.height = "100%"
+   )
+```
+
+```{r Cadet Weekly and season Group Results, include=FALSE}
+# Printing the weekly and season win percentage     
+
+#how many games correct, incorrect, and not picked each week
+c_weekly_group_correct = map(c_results, weekly_group_correct_fn)  
+
+#how many games were picked each week
+c_weekly_games_picked = map2(c_weekly_group_correct, weekly_number_of_games, weekly_games_picked_fn)
+
+#Calculating the number of correct picks for each week
+c_weekly_group_correct_picks = map(c_weekly_group_correct, weekly_group_correct_picks_fn)
+
+#Calculating weekly win percentage
+c_weekly_win_percentage = map2(c_weekly_group_correct_picks, c_weekly_games_picked, weekly_win_percentage_fn)
+
+#Calculating season win percentage
+c_season_win_percentage = round(sum(unlist(c_weekly_group_correct_picks))/sum(unlist(c_weekly_games_picked)),4)
+
+#Calculating number of games picked this season
+c_season_games = sum(unlist(c_weekly_games_picked))
+
+#calculating season wins
+c_season_wins = sum(unlist(weekly_group_correct_picks))
+
+#calculating the number of people who picked this week
+c_Total = dim(cdt.picks[[length(weeks)]])[1]
+```
+
+```{r Data for MA376 group results, include=FALSE}
+#Previous Weeks
+c_group_season_for_plotting = unlist(c_weekly_win_percentage) %>% as.data.frame() %>% 
+  rename(`Win Percentage` = ".") %>% 
+  add_column(Week = unlist(weeks))
+```
+
+```{r Plotting MA376 group results, echo=FALSE}
+c_group_plot = c_group_season_for_plotting %>% 
+ggplot(aes(x = as.factor(Week), y = `Win Percentage`))+
+  geom_point()+
+  geom_path(aes(x = Week))+
+  #geom_text(aes(label=`Win Percentage`),hjust=.5, vjust=-1.5)+
+  ylim(c(0, 1)) +
+  labs(x = "NFL Week", 
+       y = "Correct Percentage", 
+       title = "Weekly MA376 Group Correct Percentage", 
+       caption = glue::glue("Best week is Week {c_group_season_for_plotting$Week[which(c_group_season_for_plotting$`Win Percentage`==max(c_group_season_for_plotting$`Win Percentage`))]}"))+
+  theme_classic()+
+  theme(plot.title = element_text(hjust = 0.5, size = 18))
+```
+
+```{r Cadet beating cbs week, include=FALSE}
+#Creating a list of how many cbs experts the cadets beat each week.
+c_cbs_experts_beat = map2(cbs_weekly_percent, c_weekly_win_percentage, experts_beat)
+```
+
+```{r cadet beating cbs season, include=FALSE}
+#Creating a list of how many cbs experts the cadets beat for the season.
+c_cbs_experts_beat_season = map2(cbs_season_percent, c_season_win_percentage, experts_beat)
+```
+
+```{r Cadet beating ESPN, include=FALSE}
+#Creating a list of how many cbs experts the cadets beat each week.
+c_espn_experts_beat = map2(espn_weekly_percent, c_weekly_win_percentage, experts_beat)
+```
+
+```{r cadet beating ESPN season, include=FALSE}
+#Creating a list of how many cbs experts the cadets beat for the season.
+c_espn_experts_beat_season = map2(espn_season_percent, c_season_win_percentage, experts_beat)
+```
+
+```{r cdt individual results, include=FALSE}
+#Creating a list of individual results for each week.
+c_weekly_indiv = pmap(list(cdt.picks, winners, weeks), indiv_weekly_pred)
+
+#Combining each week into one dataframe and calculating percentage Correct for this week.  
+c_full_season = c_weekly_indiv %>% reduce(full_join, by = "Name") %>% 
+  mutate(Percent = round(pull(.[,ncol(.)]/weekly_games_picked[[length(weekly_games_picked)]]),4)) 
+
+#Creating a dataframe with only the weekly picks
+c_a = c_full_season %>% select(starts_with("Week"))
+
+#Creating a vector of how many weeks each person picked over the season
+c_tot_week = NULL
+c_help = NULL
+for (i in 1:dim(c_a)[1]){
+  for(j in 1:length(c_a)){
+    c_help[j] = ifelse(is.na(c_a[i,j])==T,0,1)
+    c_tot_week[i] = sum(c_help)
+  }
+}
+
+#Creating a vector of how many games each person picked over the season
+c_tot_picks= NULL
+c_help = NULL
+for (i in 1:dim(c_a)[1]){
+  for(j in 1:length(c_a)){
+    c_help[j] = unlist(weekly_games_picked)[j]*ifelse(is.na(c_a[i,j])==T,0,1)
+    c_tot_picks[i] = sum(c_help)
+  }
+}
+
+#Creatign a vector of how many games each person picked correct over the season
+c_tot_correct = NULL
+c_help = NULL
+for (i in 1:dim(c_a)[1]){
+  c_tot_correct[i] = sum(c_a[i,], na.rm = T)
+}
+
+#adding how many weeks each person picked, season correct percentage, and adjusted season percentag to the data frame and sorting the data
+c_indiv_disp = c_full_season %>% 
+  add_column(`Weeks Picked` = c_tot_week) %>%
+  add_column(c_tot_correct)%>%
+  add_column(c_tot_picks)%>%
+  mutate(`Season Percent` = round(c_tot_correct/c_tot_picks,4))%>%
+  mutate(`Adj Season Percent` = round(`Season Percent`*(c_tot_week/length(c_a)),4)) %>%
+  select(-c_tot_correct, -c_tot_picks) %>%
+  arrange(desc(Percent), desc(`Season Percent`)) %>%
+  mutate(Percent = ifelse(is.na(Percent)==T, 0, Percent))
+```
+
+```{r cdt individual percentages, include=FALSE}
+#Calculating  individual percentages for each week.
+c_weekly_indiv_percent = map2(c_weekly_indiv, weekly_games_picked, indiv_percent) %>% reduce(full_join, by = "Name")
+
+c_weekly_indiv_percent_plot = c_weekly_indiv_percent %>% 
+  pivot_longer(cols = starts_with("Week"), names_to = "Week", values_to = "Percent") %>% 
+  mutate(Percent = ifelse(is.na(Percent)==T, 0, Percent))
+
+c_weekly_indiv_percent_plot = c_weekly_indiv_percent_plot %>%
+  mutate(Week = factor(Week, levels))
+```
+
+```{r cadet sparklines, include=FALSE}
+#adding sparklines
+c_sparklines = 
+  c_weekly_indiv_percent_plot %>% 
+  group_by(Name) %>% 
+  nest() %>% 
+  mutate(plot = map2(Name, data, plot_group)) %>% 
+  select(-data)
+  
+c_indiv_disp_2 = c_indiv_disp %>% 
+  inner_join(c_sparklines, by = "Name") %>% 
+  mutate(`Season Trend` = NA)
+```
+
+```{r Printing Individual Cdt Table, echo=FALSE}
+# Printing the individual Table
+c_indiv_table = c_indiv_disp_2 %>% 
+  gt() %>% 
+  cols_align(
+    align = "center") %>% 
+   tab_header(
+    title = md("MA376 Individual Results"),
+    subtitle = md(glue("Week {length(weeks)}"))
+    ) %>% 
+   tab_style(
+    style = cell_text(color = "red", weight = "bold"),
+    locations = cells_body(
+      columns = c(Percent),
+      rows = Percent<.5
+    )) %>% 
+   tab_style(
+    style = cell_text(color = "green", weight = "bold"),
+    locations = cells_body(
+      columns = c(Percent),
+      rows = Percent>.5
+    )) %>% 
+     tab_style(
+    style = cell_text(color = "red", weight = "bold"),
+    locations = cells_body(
+      columns = c(`Season Percent`),
+      rows = `Season Percent`<.5
+    )) %>% 
+   tab_style(
+    style = cell_text(color = "green", weight = "bold"),
+    locations = cells_body(
+      columns = c(`Season Percent`),
+      rows = `Season Percent`>.5
+    ))%>% 
+     tab_style(
+    style = cell_text(color = "red", weight = "bold"),
+    locations = cells_body(
+      columns = c(`Adj Season Percent`),
+      rows = `Adj Season Percent`<.5
+    )) %>% 
+   tab_style(
+    style = cell_text(color = "green", weight = "bold"),
+    locations = cells_body(
+      columns = c(`Adj Season Percent`),
+      rows = `Adj Season Percent`>.5
+    ))%>% 
+  tab_options(
+    data_row.padding = px(3),
+    container.height = "100%"
+   )%>% 
+    tab_spanner(
+    label = "Weekly # Correct",
+    columns = starts_with(c("Week "))
+  )%>% 
+  text_transform(
+    locations = cells_body(c(`Season Trend`)),
+    fn = function(x){
+      map(c_indiv_disp_2$plot, ggplot_image, height = px(30), aspect_ratio = 4)
+                 }) %>%
+  cols_hide(c(plot))
+
+c_indiv_winners = c_indiv_disp_2 %>% filter(Percent == max(Percent)) %>% select(Name) %>% pull() %>% paste(collapse = ", ")
+
+c_indiv_season = c_indiv_disp_2 %>% 
+  filter(`Season Percent` == max(`Season Percent`)) %>% 
+  select(Name) %>% 
+  pull() %>% 
+  paste(collapse = ", ")
+
+c_indiv_season_adj = c_indiv_disp_2 %>% 
+  filter(`Adj Season Percent` == max(`Adj Season Percent`)) %>% 
+  select(Name) %>% 
+  pull() %>% 
+  paste(collapse = ", ")
+```
+
+<!--
+```{r cadet formattable, echo=FALSE}
+c_indiv_disp_3 = c_indiv_disp_2 %>% select(-plot)
+c_indiv_disp_3$`Season Trend` = apply(c_indiv_disp_3[,2:(1+length(weeks))], 1, FUN = function(x) as.character(htmltools::as.tags(sparkline(as.numeric(x), type = "line", chartRangeMin = 0, chartRangeMax = 1, fillColor = "white"))))
+
+c_out = as.htmlwidget(formattable(c_indiv_disp_3, 
+                                align = c("l", rep("c", NROW(c_indiv_disp_3)-1)),
+              list(`Season Percent` = color_bar("#FA614B"),
+              `Season Percent`= improvement_formatter,
+              `Adj Season Percent`= improvement_formatter)))
+              
+c_out$dependencies = c(c_out$dependencies, htmlwidgets:::widget_dependencies("sparkline", "sparkline"))
+```
+-->
+
+```{r Plotting individual Cdt results over the season2, echo=FALSE}
+#Creating the individual plot.  
+c_indiv_plot = c_weekly_indiv_percent_plot %>% 
+  ggplot(aes(x = as.factor(Week), y = Percent, color = Name))+
+  geom_point()+
+  geom_line(aes(x = as.factor(Week), y = Percent, color = Name, 
+                group = Name))+
+  geom_text_repel(aes(label=round(Percent,4)),hjust=.5, vjust=2, size = 3)+
+  #geom_text(aes(label=Percent),hjust=.5, vjust=-1.5)+
+  ylim(c(0, 1)) +
+  labs(x = "NFL Week",
+       y = "Correct Percentage", 
+       title = "Weekly MA376 Individual Correct Percentage")+
+  theme_classic()+
+  facet_wrap(~Name)+
+#  scale_x_discrete(guide = guide_axis(n.dodge = 2))+
+  theme(legend.position = "none",
+    plot.title = element_text(hjust = 0.5, size = 18),
+    axis.text.x=element_text(angle =45, vjust = 1, hjust = 1))
+```
+
+```{r Combined Cadet and Instructor Predictions, include=FALSE}
+#Combining inst and cadet picks
+comb_picks = map2(inst.picks, cdt.picks, comb_picks_fn)
+
+#Creating the list of Combined predictions each week.
+comb_games = map(comb_picks, games_fn)
+
+#Creating the Combined prediction table.  
+comb_pred_table = map(comb_games, pred_table_fn)
+
+#Adding who won to the predictions
+comb_with_winners = map2(comb_pred_table, winners, adding_winners)
+
+#Creating Combined results for each week.
+comb_results = map2(comb_with_winners,weekly_number_of_games, comb_results_fn)
+```
+
+```{r Printing Combined Prediction Results, echo=FALSE}
+#Displaying the Combined results
+comb_table = comb_results[[length(comb_results)]] %>% 
+  gt() %>% 
+  cols_align(
+    align = "center") %>% 
+   tab_header(
+    title = md("This Week's Combined Cadet and Instructor Predictions"),
+    subtitle = md(glue("Week {length(results)}"))
+    ) %>% 
+   tab_style(
+    style = cell_text(color = "red", weight = "bold"),
+    locations = cells_body(
+      columns = c(Correct),
+      rows = Correct =="No"
+    )) %>% 
+   tab_style(
+    style = cell_text(color = "green", weight = "bold"),
+    locations = cells_body(
+      columns = c(Correct),
+      rows = Correct =="Yes"
+    ))%>% 
+  tab_options(
+    data_row.padding = px(3),
+    container.height = "100%"
+   )
+```
+
+```{r Combined Results over season, include=FALSE}
+#how many games correct, incorrect, and not picked each week
+comb_weekly_group_correct = map(comb_results, weekly_group_correct_fn)  
+
+#how many games were picked each week
+comb_weekly_games_picked = map2(comb_weekly_group_correct, weekly_number_of_games, weekly_games_picked_fn)
+
+#Calculating the number of correct picks for each week
+comb_weekly_group_correct_picks = map(comb_weekly_group_correct, weekly_group_correct_picks_fn)
+
+#Calculating weekly win percentage
+comb_weekly_win_percentage = map2(comb_weekly_group_correct_picks, comb_weekly_games_picked, weekly_win_percentage_fn)
+
+#Calculating season win percentage
+comb_season_win_percentage = round(sum(unlist(comb_weekly_group_correct_picks))/sum(unlist(comb_weekly_games_picked)),4)
+
+#Calculating number of games picked this season
+comb_season_games = sum(unlist(comb_weekly_games_picked))
+
+#calculating season wins
+comb_season_wins = sum(unlist(comb_weekly_group_correct_picks))
+
+# #calculating combined weekly win percentage
+# comb_weekly_win_percentage = map2(weekly_group_correct_picks, weekly_games_picked, weekly_win_percentage_fn)
+
+#calculating the number of people who picked this week
+comb_Total = dim(comb_picks[[length(comb_picks)]])[1]
+
+comb_season_for_plotting = unlist(comb_weekly_win_percentage) %>% as.data.frame() %>% 
+  rename(`Win Percentage` = ".") %>% 
+  add_column(Week = unlist(weeks))
+```
+
+```{r Plotting the Combined group results, echo=FALSE}
+comb_plot = comb_season_for_plotting %>% 
+ggplot(aes(x = as.factor(Week), y = `Win Percentage`))+
+  geom_point()+
+  geom_path(aes(x = Week))+
+  #geom_text(aes(label=`Win Percentage`),hjust=.5, vjust=-1.5)+
+  ylim(c(0, 1)) +
+  labs(x = "NFL Week", 
+       y = "Correct Percentage", 
+       title = "Weekly Combined Correct Percentage", 
+       caption = glue::glue("Best week is Week {comb_season_for_plotting$Week[which(comb_season_for_plotting$`Win Percentage`==max(comb_season_for_plotting$`Win Percentage`))]}"))+
+  theme_classic()+
+  theme(plot.title = element_text(hjust = 0.5, size = 18))
+```
+
+```{r Combined beating cbs, include=FALSE}
+#Creating a list of how many cbs experts our combined picks beat each week.
+comb_cbs_experts_beat = map2(cbs_weekly_percent, comb_weekly_win_percentage, experts_beat)
+```
+
+```{r combined beating cbs season, include=FALSE}
+#Creating a list of how many cbs experts our combined picks beat for the season.
+comb_cbs_experts_beat_season = map2(cbs_season_percent, comb_season_win_percentage, experts_beat)
+```
+
+```{r Combined beating ESPN, include=FALSE}
+#Creating a list of how many cbs experts we beat each week.
+comb_espn_experts_beat = map2(espn_weekly_percent, comb_weekly_win_percentage, experts_beat)
+```
+
+```{r combined beating ESPN season, include=FALSE}
+#Creating a list of how many cbs experts our combined picks beat for the season.
+comb_espn_experts_beat_season = map2(espn_season_percent, comb_season_win_percentage, experts_beat)
+```
+
+```{r matched picks, include=FALSE}
+#Finding where inst and Cadet predictions match
+matched = map2(results, c_results, matched_fn)
+```
+
+```{r Printing matched results, echo=FALSE}
+matched_table = matched[[length(matched)]] %>% 
+  gt() %>% 
+  cols_align(
+    align = "center") %>% 
+   tab_header(
+    title = md("This Week's Matched Cadet and Instructor Predictions"),
+    subtitle = md(glue("Week {length(results)}"))
+    ) %>% 
+   tab_style(
+    style = cell_text(color = "red", weight = "bold"),
+    locations = cells_body(
+      columns = c(Correct),
+      rows = Correct =="No"
+    )) %>% 
+   tab_style(
+    style = cell_text(color = "green", weight = "bold"),
+    locations = cells_body(
+      columns = c(Correct),
+      rows = Correct =="Yes"
+    ))%>% 
+  tab_options(
+    data_row.padding = px(3),
+    container.height = "100%"
+   )
+```
+
+```{r include=FALSE}
+matched_per = map(matched, matched_percent_fn) %>% unlist() %>% as.data.frame() 
+
+matched_season_percent_for_plotting = matched_per %>% 
+  mutate(`Win Percentage` = matched_per[,1]) %>% 
+  select(`Win Percentage`) %>% 
+  add_column(Week = unlist(weeks)) 
+```
+
+```{r Plotting matched percent, echo=FALSE}
+matched_plot = matched_season_percent_for_plotting %>% 
+  ggplot(aes(x = as.factor(Week), y = `Win Percentage`))+
+  geom_point()+
+  geom_path(aes(x = Week))+
+  #geom_text(aes(label=`Win Percentage`),hjust=.5, vjust=-1.5)+
+  ylim(c(0, 1)) +
+  labs(x = "NFL Week", 
+       y = "Correct Percentage", 
+       title = "Weekly Matched Correct Percentage", 
+       caption = glue::glue("Best week is Week {comb_season_for_plotting$Week[which(comb_season_for_plotting$`Win Percentage`==max(comb_season_for_plotting$`Win Percentage`))]}"))+
+  theme_classic()+
+  theme(plot.title = element_text(hjust = 0.5, size = 18))
+```
+
+```{r Matched Results over season, include=FALSE}
+#how many games correct, incorrect, and not picked each week
+matched_weekly_group_correct = map(matched, weekly_group_correct_fn)  
+
+#how many games were picked each week
+matched_weekly_games_picked = map2(matched_weekly_group_correct, weekly_number_of_games, weekly_games_picked_fn)
+
+#Calculating the number of correct picks for each week
+matched_weekly_group_correct_picks = map(matched_weekly_group_correct, weekly_group_correct_picks_fn)
+
+#Calculating weekly win percentage
+matched_weekly_win_percentage = map2(matched_weekly_group_correct_picks, matched_weekly_games_picked, weekly_win_percentage_fn)
+
+#Calculating season win percentage
+matched_season_win_percentage = round(sum(unlist(matched_weekly_group_correct_picks))/sum(unlist(matched_weekly_games_picked)),4)
+
+#Calculating number of games picked this season
+matched_season_games = sum(unlist(matched_weekly_games_picked))
+
+#calculating season wins
+matched_season_wins = sum(unlist(matched_weekly_group_correct_picks))
+```
+
+Instructor Group Predictions {data-navmenu="Instructor Results"}
+==========================================================================
+
+Sidebar {.sidebar} 
+-------------------------------------
+#### CBS Sports
+
+<font size="4">
+
+This week we beat or tied `r cbs_experts_beat[[length(weeks)]]` of `r cbs_experts_total[[length(weeks)]]` CBS Sports' Experts.
+
+For the season we are currently beating or tied with `r cbs_experts_beat_season[[length(weeks)]]` of `r cbs_experts_season_total[[length(weeks)]]` CBS Sports' Experts.
+ 
+ </font>
+
+
+#### ESPN
+
+<font size="4">
+
+We also beat or tied `r espn_experts_beat[[length(weeks)]]` of `r espn_experts_total[[length(weeks)]]` ESPN Experts.
+ 
+For the season we are currently beating or tied with `r espn_experts_beat_season[[length(weeks)]]` of `r espn_experts_season_total[[length(weeks)]]` ESPN Experts.
+
+</font>
+
+Row
+--------------------------------------
+
+### Win percentage for the week
+
+```{r}
+inst_rate <- weekly_win_percentage[[length(weekly_win_percentage)]]*100
+gauge(inst_rate, min = 0, max = 100, symbol = '%', gaugeSectors(
+  success = c(55, 100), warning = c(40, 54), danger = c(0, 39)
+))
+```
+
+```{r}
+#valueBox(value = weekly_win_percentage[[length(weekly_win_percentage)]],icon = "fa-user-plus",caption = "Win percentage for the week.",color = "green")
+```
+
+### Season Win Percentage
+
+```{r}
+inst_season <- season_win_percentage*100
+gauge(inst_season, min = 0, max = 100, symbol = '%', gaugeSectors(
+  success = c(55, 100), warning = c(40, 54), danger = c(0, 39)
+))
+```
+
+```{r}
+#valueBox(value = season_win_percentage,icon = "fa-user-plus",caption = "Season win percentage.",color = "green")
+```
+
+### Games Correct
+```{r}
+valueBox(value = season_wins,icon = "fa-trophy",caption = "Correct Games this Season")
+```
+
+### Games Picked
+```{r}
+valueBox(value = season_games,icon = "fa-clipboard-list",caption = "Games Picked this Season")
+```
+
+### Number of predictions
+```{r}
+valueBox(value = Total,icon = "fa-users",caption = "Predictions this week")
+```
+
+Row
+--------------------------------------
+
+### 
+
+```{r}
+inst_group_table
+```
+
+### 
+
+```{r}
+ggplotly(inst_group_season_plot) %>% 
+  layout(title = list(y = .93, xref = "plot"),
+         margin = list(t = 40))
+```
+
+Instructor Individual Predictions {data-navmenu="Instructor Results"}
+==========================================================================
+
+
+Sidebar {.sidebar} 
+-------------------------------------
+
+#### Best Picks of the Week.
+
+<font size="4">
+
+ `r indiv_winners`
+ 
+ </font>
+ 
+#### Best Season Correct Percentage
+<font size="4">
+
+`r indiv_season`
+ 
+ </font>
+
+#### Best Adjusted Season Correct Percentage
+<font size="4">
+
+`r indiv_season_adj`
+
+ * Adjusted season percentage accounts for the number of weeks picked.
+ 
+ </font>
+
+<!--
+Row 
+--------------------------------------
+
+### Best picks of the week
+```{r}
+valueBox(value = indiv_winners,icon = "fa-clipboard-list",caption = "Best Picks of the Week")
+```
+
+### Best picks of the season
+```{r}
+valueBox(value = indiv_season,icon = "fa-trophy",caption = "Season Leader")
+```
+
+### Best picks of the season adjusted
+```{r}
+valueBox(value = indiv_season_adj,icon = "fa-users",caption = "Adjusted Season Leader")
+```
+
+-->
+
+row {.tabset}
+--------------------------------------
+
+### Individual Table
+```{r}
+indiv_table
+```
+
+<!--
+### Individual Table2
+
+```{r, out.height="100%"}
+indiv_table_2
+```
+-->
+### Individual Plots
+```{r, out.width="100%"}
+ggplotly(inst_indiv_plots)
+```
+<!--
+### Individual Plots2
+```{r}
+ggplotly(indiv_plot_comb)
+```
+-->
+
+Cadet Group Predictions {data-navmenu="Cadet Results"}
+==========================================================================
+
+Sidebar {.sidebar} 
+-------------------------------------
+#### CBS Sports
+
+<font size="4">
+
+This week we beat or tied `r c_cbs_experts_beat[[length(weeks)]]` of `r cbs_experts_total[[length(weeks)]]` CBS Sports' Experts.
+ 
+For the season we are currently beating or tied with `r c_cbs_experts_beat_season[[length(weeks)]]` of `r cbs_experts_season_total[[length(weeks)]]` CBS Sports' Experts.
+
+</font>
+
+
+#### ESPN
+
+<font size="4">
+
+We also beat or tied `r c_espn_experts_beat[[length(weeks)]]` of `r espn_experts_total[[length(weeks)]]` ESPN Experts.
+
+For the season we are currently beating or tied with `r c_espn_experts_beat_season[[length(weeks)]]` of `r espn_experts_season_total[[length(weeks)]]` ESPN Experts.
+
+</font>
+
+Row
+--------------------------------------
+
+### Win percentage for the week
+
+```{r}
+cadet_rate <- c_weekly_win_percentage[[length(c_weekly_win_percentage)]]*100
+gauge(cadet_rate, min = 0, max = 100, symbol = '%', gaugeSectors(
+  success = c(55, 100), warning = c(40, 54), danger = c(0, 39)
+))
+```
+
+```{r}
+#valueBox(value = c_weekly_win_percentage[[length(c_weekly_win_percentage)]],icon = "fa-user-plus",caption = "Win percentage for the week.",color = "green")
+```
+
+### Season Win Percent
+
+```{r}
+cadet_season <- c_season_win_percentage*100
+gauge(cadet_season, min = 0, max = 100, symbol = '%', gaugeSectors(
+  success = c(55, 100), warning = c(40, 54), danger = c(0, 39)
+))
+```
+
+```{r}
+#valueBox(value = c_season_win_percentage,icon = "fa-user-plus",caption = "Season win percentage.",color = "green")
+```
+
+### Games Correct
+```{r}
+valueBox(value = c_season_wins,icon = "fa-trophy",caption = "Correct Games this Season")
+```
+
+### Games Picked
+```{r}
+valueBox(value = c_season_games,icon = "fa-clipboard-list",caption = "Games Picked this Season")
+```
+
+### Predictions
+```{r}
+valueBox(value = c_Total,icon = "fa-users",caption = "Predictions this week")
+```
+
+
+Row
+--------------------------------------
+
+### 
+
+```{r}
+c_group_table
+```
+
+### 
+
+```{r}
+ggplotly(c_group_plot) %>% 
+  layout(title = list(y = .93, xref = "plot"),
+         margin = list(t = 40))
+```
+
+Cadet Individual Predictions {data-navmenu="Cadet Results"}
+==========================================================================
+
+Sidebar {.sidebar} 
+-------------------------------------
+
+#### Best Picks of the Week.
+
+<font size="4">
+
+ `r c_indiv_winners`
+ 
+ </font>
+ 
+#### Best Season Correct Percentage
+<font size="4">
+
+`r c_indiv_season`
+ 
+ </font>
+
+#### Best Adjusted Season Correct Percentage
+<font size="4">
+
+`r c_indiv_season_adj`
+
+ * Adjusted season percentage accounts for the number of weeks picked.
+ 
+ </font>
+ 
+<!-- 
+Row 
+--------------------------------------
+
+### Best picks of the week
+```{r}
+valueBox(value = c_indiv_winners,icon = "fa-clipboard-list",caption = "Best Picks of the Week")
+```
+
+### Best picks of the season
+```{r}
+valueBox(value = c_indiv_season,icon = "fa-trophy",caption = "Season Leader")
+```
+
+### Best picks of the season adjusted
+```{r}
+valueBox(value = c_indiv_season_adj,icon = "fa-user-plus",caption = "Adjusted Season Leader")
+```
+
+-->
+
+Column {.tabset}
+--------------------------------------
+
+### Cadet Individual Table
+```{r}
+c_indiv_table
+```
+
+<!--
+### Cadet Individual Table2
+
+```{r, out.height="100%"}
+c_out
+```
+-->
+
+### Cadet Individual Plots
+```{r, out.width="100%", out.height="100%"}
+ggplotly(c_indiv_plot)
+```
+
+Combined Predictions
+==========================================================================
+
+Sidebar {.sidebar} 
+-------------------------------------
+#### CBS Sports
+
+<font size="4">
+
+This week our combined predictions beat or tied `r comb_cbs_experts_beat[[length(weeks)]]` of `r cbs_experts_total[[length(weeks)]]` CBS Sports' Experts.
+
+For the season we are currently beating or tied with `r comb_cbs_experts_beat_season[[length(weeks)]]` of `r cbs_experts_season_total[[length(weeks)]]` CBS Sports' Experts.
+
+</font>
+
+
+#### ESPN
+
+<font size="4">
+
+Our combined predictions also beat or tied `r comb_espn_experts_beat[[length(weeks)]]` of `r espn_experts_total[[length(weeks)]]` ESPN Experts.
+
+For the season our combined predictions are currently beating or tied with `r comb_espn_experts_beat_season[[length(weeks)]]` of `r espn_experts_season_total[[length(weeks)]]` ESPN Experts.
+
+</font>
+
+Row
+--------------------------------------
+
+### Win percentage for the week
+
+```{r}
+comb_rate <- comb_weekly_win_percentage[[length(comb_weekly_win_percentage)]]*100
+gauge(comb_rate, min = 0, max = 100, symbol = '%', gaugeSectors(
+  success = c(55, 100), warning = c(40, 54), danger = c(0, 39)
+))
+```
+
+```{r}
+#valueBox(value = comb_weekly_win_percentage[[length(comb_weekly_win_percentage)]],icon = "fa-user-plus",caption = "Win percentage for the week.",color = "green")
+```
+
+### Season Win Percent
+
+```{r}
+comb_season <- comb_season_win_percentage*100
+gauge(comb_season, min = 0, max = 100, symbol = '%', gaugeSectors(
+  success = c(55, 100), warning = c(40, 54), danger = c(0, 39)
+))
+```
+
+
+```{r}
+#valueBox(value = comb_season_win_percentage,icon = "fa-user-plus",caption = "Season win percentage.",color = "green")
+```
+
+### Games Correct
+```{r}
+valueBox(value = comb_season_wins,icon = "fa-trophy",caption = "Correct Games this Season")
+```
+
+### Games Picked
+```{r}
+valueBox(value = comb_season_games,icon = "fa-clipboard-list",caption = "Games Picked this Season")
+```
+
+### Number of Predictions
+```{r}
+valueBox(value = comb_Total,icon = "fa-users",caption = "Predictions this week")
+```
+
+
+Row
+--------------------------------------
+
+### 
+
+```{r}
+comb_table
+```
+
+### 
+
+```{r}
+ggplotly(comb_plot) %>% 
+  layout(title = list(y = .93, xref = "plot"),
+         margin = list(t = 40))
+```
+
+Matched Predictions
+==========================================================================
+
+Row
+--------------------------------------
+
+### Win percentage for the week
+
+```{r}
+matched_rate <- matched_weekly_win_percentage[[length(matched_weekly_win_percentage)]]*100
+gauge(matched_rate, min = 0, max = 100, symbol = '%', gaugeSectors(
+  success = c(55, 100), warning = c(40, 54), danger = c(0, 39)
+))
+```
+
+```{r}
+#valueBox(value = matched_weekly_win_percentage[[length(matched_weekly_win_percentage)]],icon = "fa-user-plus",caption = "Win percentage for the week.",color = "green")
+```
+
+### Season Win Percent
+
+```{r}
+matched_season <- matched_season_win_percentage*100
+gauge(matched_season, min = 0, max = 100, symbol = '%', gaugeSectors(
+  success = c(55, 100), warning = c(40, 54), danger = c(0, 39)
+))
+```
+
+```{r}
+#valueBox(value = matched_season_win_percentage,icon = "fa-user-plus",caption = "Season win percentage.",color = "green")
+```
+
+### Games Picked
+```{r}
+valueBox(value = matched_season_games,icon = "fa-clipboard-list",caption = "Games Picked this Season")
+```
+
+### Season Games Correct
+```{r}
+valueBox(value = matched_season_wins,icon = "fa-trophy",caption = "Correct Games this Season")
+```
+
+
+Row
+--------------------------------------
+
+### 
+
+```{r}
+matched_table
+```
+
+### 
+
+```{r}
+ggplotly(matched_plot) %>% 
+  layout(title = list(y = .93, xref = "plot"),
+         margin = list(t = 40))
+```
