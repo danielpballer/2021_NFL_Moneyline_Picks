@@ -535,7 +535,7 @@ c_season_win_percentage = round(sum(unlist(c_weekly_group_correct_picks))/sum(un
 c_season_games = sum(unlist(c_weekly_games_picked))
 
 #calculating season wins
-c_season_wins = sum(unlist(weekly_group_correct_picks))
+c_season_wins = sum(unlist(c_weekly_group_correct_picks))
 
 #calculating the number of people who picked this week
 c_Total = dim(cdt.picks[[length(weeks)]])[1]
