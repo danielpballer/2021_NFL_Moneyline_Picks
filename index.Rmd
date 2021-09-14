@@ -1130,7 +1130,7 @@ c_group_odds_table = c_odds_results[[length(c_odds_results)]] %>% gt() %>%
 
 ```{r Cadet winnings plot}
 c_group_moneyline_plot_data = c_group_season_for_plotting %>% 
-  add_column(season_money) %>% 
+  add_column(c_season_money) %>% 
   select(-`Win Percentage`)
 
 c_group_moneyline_plot = c_group_moneyline_plot_data %>% 
@@ -1231,7 +1231,7 @@ comb_group_odds_table = comb_odds_results[[length(comb_odds_results)]] %>% gt() 
 
 ```{r combined winnings plot}
 comb_group_moneyline_plot_data = comb_season_for_plotting %>% 
-  add_column(season_money) %>% 
+  add_column(comb_season_money) %>% 
   select(-`Win Percentage`)
 
 comb_moneyline_plot =  comb_group_moneyline_plot_data %>% 
