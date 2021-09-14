@@ -389,3 +389,64 @@ matched_percent_fn = function(x){
   
   return(round(Yes/(Yes+No),4))
 }
+
+######### ODDS Functions ###########
+
+#Odds Cleaning
+odds_cleaning = function(odds){
+  odds %>% 
+    mutate(team = case_when(
+      team == "Packers" ~ "Green Bay Packers",
+      team == "Football Team" ~ "Washington Football Team",
+      team == "Bills" ~ "Buffalo Bills",
+      team == "Falcons" ~ "Atlanta Falcons",
+      team == "Ravens" ~ "Baltimore Ravens",
+      team == "Chiefs" ~ "Kansas City Chiefs",
+      team == "Titans" ~ "Tennessee Titans",
+      team == "Colts" ~ "Indianapolis Colts",
+      team == "Bengals" ~ "Cincinnati Bengals",
+      team == "49ers" ~ "San Francisco 49ers",
+      team == "Giants" ~ "New York Giants",
+      team == "Lions" ~ "Detroit Lions",
+      team == "Steelers" ~ "Pittsburgh Steelers",
+      team == "Texans" ~ "Houston Texans",
+      team == "Broncos" ~ "Denver Broncos",
+      team == "Buccaneers" ~ "Tampa Bay Buccaneers",
+      team == "Cardinals" ~ "Arizona Cardinals",
+      team == "Bears" ~ "Chicago Bears",
+      team == "Panthers" ~ "Carolina Panthers",
+      team == "Eagles" ~ "Philadelphia Eagles",
+      team == "Jets" ~ "New York Jets",
+      team == "Vikings" ~ "Minnesota Vikings",
+      team == "Dolphins" ~ "Miami Dolphins",
+      team == "Jaguars" ~ "Jacksonville Jaguars",
+      team == "Browns" ~ "Cleveland Browns",
+      team == "Chargers" ~ "Los Angeles Chargers",
+      team == "Seahawks" ~ "Seattle Seahawks",
+      team == "Cowboys" ~ "Dallas Cowboys",
+      team == "Patriots" ~ "New England Patriots",
+      team == "Saints" ~ "New Orleans Saints",
+      team == "Raiders" ~ "Las Vegas Raiders",
+      team == "Rams" ~ "Los Angeles Rams"))
+}
+
+#Function to add the moneyline odds and how much we won for each game to the results
+weekly_odds = function(weeks, results){
+  helper = cl_odds %>% 
+    filter(week == weeks) 
+  
+  left_join(results, helper, by = c("Prediction" = "team")) %>% 
+    select(-c(`Correct Votes`, `Correct Percent`, week, Winner), Odds = odds) %>% 
+    mutate(Money = case_when(Odds>0 ~ (Odds/100)*10,
+                             Odds<0 ~ 10/abs((Odds/100)))) %>% 
+    mutate(Money = round(Money, 2)) %>% 
+    mutate(Winnings = case_when(Correct == "Yes" ~ Money,
+                                Correct == "No" ~ -10,
+                                TRUE ~ 0)) %>% 
+    select(-Money)
+}
+
+#Function to create a list of total winnings for the week.
+weekly_money = function(odds_results){
+  odds_results %>% summarise(sum(Winnings)) %>% pull()
+}

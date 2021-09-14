@@ -1,7 +1,7 @@
 ---
-title: "NFL Scores Week 3"
+title: "NFL_Web_Scraping"
 author: "Daniel Baller"
-date: "Sept 3, 2020"
+date: "AUG 25, 2021"
 output: pdf_document
 ---
 
@@ -21,7 +21,7 @@ library(rvest)
 
 # Only thing you need to change (add additional week)
 
-week = list(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17) # List of weeks
+week = list(1) # List of weeks
 
 url = "https://www.cbssports.com/nfl/schedule/2020/regular/"  #base URL
 
@@ -170,8 +170,33 @@ week%>%
   write_csv(glue::glue("./CSV_Data_Files/ESPN_Experts_Season_{length(week)}.csv"))
 ```
 
+#Scraping Moneyline odds Ceasars Sports Book
+```{r}
+read_html("https://www.sportsline.com/nfl/odds/money-line/")%>%
+    html_nodes("td:nth-child(4) .primary , h4")%>%
+    html_text() %>% 
+    matrix(ncol = 2, byrow = TRUE) %>%
+    as.data.frame() %>% 
+    mutate(V2 = as.numeric(V2)) %>% 
+    rename(`team` = V1, `odds` = V2) %>% 
+    add_column(week = week[[length(week)]]) %>% 
+    write_csv(glue::glue("./CSV_Data_Files/Moneyline_Odds_{length(week)}.csv"))
+```
+
+
+
 ########################## Sandbox
 ```{r}
+read_html("https://www.sportsline.com/nfl/odds/money-line/")%>%
+    html_nodes("td:nth-child(4) .primary , h4")%>%
+    html_text() %>% 
+    matrix(ncol = 4, byrow = TRUE) %>%
+    as.data.frame() %>% 
+    mutate(V2 = as.numeric(V2), V4 = as.numeric(V4)) %>% 
+    rename(`away_team` = V1, `away_odds` = V2, `home_team` = V3, `home_odds` = V4) %>% 
+    add_column(week = week[[length(week)]])
+ 
+
 read_html("https://www.cbssports.com/nfl/picks/experts/straight-up/17/")%>%
     html_nodes(".TableExpertPicks-overallRecords")%>%
     html_text() %>% 
