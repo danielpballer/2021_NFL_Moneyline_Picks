@@ -31,6 +31,7 @@ library(plotly)
 library(htmlwidgets)
 library(mdthemes)
 library(ggtext)
+library(ggnewscale)
 source("./Functions/functions2.R")
 
 thematic::thematic_rmd(font = "auto")
@@ -1040,11 +1041,12 @@ group_moneyline_plot =  group_moneyline_plot_data %>%
              fill = `Season Winnings` < 0))+
   geom_bar(stat = "identity")+
   scale_fill_manual(values = c("#be0032", "#006400"))+
+  new_scale("fill")+
   geom_point(aes(x = as.factor(Week), y = `Weekly Winnings`, 
-                 color = `Weekly Winnings` < 0), 
+                 fill = `Weekly Winnings` < 0), 
              size = 3, shape = 21, color = "black", stroke=2)+
   geom_path(aes(x = as.factor(Week), y = `Weekly Winnings`))+
-  scale_color_manual(values = c("#be0032", "#006400"))+
+  scale_fill_manual(values = c("#be0032", "#006400"))+
   labs(x = "NFL Week", y = "Winnings", title = "Instructor weekly and season winnings",
        subtitle = "Bars represent season cumulative <span style = 'color:#006400'>gains</span> and <span style = 'color:#be0032'>losses</span>.  \nPoints represent Weekly <span style = 'color:#006400'>gains</span> and <span style = 'color:#be0032'>losses</span>.")+
   geom_hline(aes(yintercept = 0))+
@@ -1142,11 +1144,12 @@ c_group_moneyline_plot = c_group_moneyline_plot_data %>%
              fill = `Season Winnings` < 0))+
   geom_bar(stat = "identity")+
   scale_fill_manual(values = c("#be0032", "#006400"))+
+  new_scale("fill")+
   geom_point(aes(x = as.factor(Week), y = `Weekly Winnings`, 
-                 color = `Weekly Winnings` < 0), 
+                 fill = `Weekly Winnings` < 0), 
              size = 3, shape = 21, color = "black", stroke=2)+
   geom_path(aes(x = as.factor(Week), y = `Weekly Winnings`))+
-  scale_color_manual(values = c("#be0032", "#006400"))+
+  scale_fill_manual(values = c("#be0032", "#006400"))+
   labs(x = "NFL Week", y = "Winnings", title = "Cadet weekly and season winnings",
        subtitle = "Bars represent season cumulative <span style = 'color:#006400'>gains</span> and <span style = 'color:#be0032'>losses</span>.  \nPoints represent Weekly <span style = 'color:#006400'>gains</span> and <span style = 'color:#be0032'>losses</span>.")+
   geom_hline(aes(yintercept = 0))+
@@ -1241,14 +1244,15 @@ comb_group_moneyline_plot_data = comb_season_for_plotting %>%
 comb_moneyline_plot =  comb_group_moneyline_plot_data %>% 
   ggplot(aes(x = as.factor(Week),
              y = `Season Winnings`, 
-             fill = `Season Winnings` < 0))+
+             fill = `Season Winnings` > 0))+
   geom_bar(stat = "identity")+
   scale_fill_manual(values = c("#be0032", "#006400"))+
+  new_scale("fill")+
   geom_point(aes(x = as.factor(Week), y = `Weekly Winnings`, 
-                 color = `Weekly Winnings` < 0), 
+                 fill = `Weekly Winnings` > 0), 
              size = 3, shape = 21, color = "black", stroke=2)+
   geom_path(aes(x = as.factor(Week), y = `Weekly Winnings`))+
-  scale_color_manual(values = c("#be0032", "#006400"))+
+  scale_fill_manual(values = c("#be0032", "#006400"))+
   labs(x = "NFL Week", y = "Winnings", title = "Combined picks weekly and season winnings",
        subtitle = "Bars represent season cumulative <span style = 'color:#006400'>gains</span> and <span style = 'color:#be0032'>losses</span>.  \nPoints represent Weekly <span style = 'color:#006400'>gains</span> and <span style = 'color:#be0032'>losses</span>.")+
   geom_hline(aes(yintercept = 0))+
