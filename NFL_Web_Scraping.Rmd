@@ -20,10 +20,11 @@ library(purrr)
 library(rvest)
 
 # Only thing you need to change (add additional week)
+current_week = 2
 
-week = list(1) # List of weeks
+week = as.list(seq(1:current_week)) # List of weeks
 
-url = "https://www.cbssports.com/nfl/schedule/2020/regular/"  #base URL
+url = "https://www.cbssports.com/nfl/schedule/2021/regular/"  #base URL
 
 list_of_pages = function(x){
   str_c(url,x)

@@ -37,8 +37,9 @@ thematic::thematic_rmd(font = "auto")
 ```
 
 ```{r Reading in our picks files, include=FALSE}
+current_week = 2 #Set what week it is
 week_1 = read_csv("./CSV_Data_Files/2021 NFL Week 1.csv")
-# week_2 = read_csv("./CSV_Data_Files/2021 NFL Week 2.csv")
+week_2 = read_csv("./CSV_Data_Files/2021 NFL Week 2.csv")
 # week_3 = read_csv("./CSV_Data_Files/2021 NFL Week 3.csv")
 # week_4 = read_csv("./CSV_Data_Files/2021 NFL Week 4.csv")
 # week_5 = read_csv("./CSV_Data_Files/2021 NFL Week 5.csv")
@@ -55,7 +56,7 @@ week_1 = read_csv("./CSV_Data_Files/2021 NFL Week 1.csv")
 # week_16 = read_csv("./CSV_Data_Files/2021 NFL Week 16.csv")
 # week_17 = read_csv("./CSV_Data_Files/2021 NFL Week 17.csv")
 cadet_wk1 = read_csv("./CSV_Data_Files/2021 NFL Week 1 MA376.csv")
-# cadet_wk2 = read_csv("./CSV_Data_Files/2021 NFL Week 2 MA376.csv")
+cadet_wk2 = read_csv("./CSV_Data_Files/2021 NFL Week 2 MA376.csv")
 # cadet_wk3 = read_csv("./CSV_Data_Files/2021 NFL Week 3 MA376.csv")
 # cadet_wk4 = read_csv("./CSV_Data_Files/2021 NFL Week 4 MA376.csv")
 # cadet_wk5 = read_csv("./CSV_Data_Files/2021 NFL Week 5 MA376.csv")
@@ -72,18 +73,6 @@ cadet_wk1 = read_csv("./CSV_Data_Files/2021 NFL Week 1 MA376.csv")
 # cadet_wk16 = read_csv("./CSV_Data_Files/2021 NFL Week 16 MA376.csv")
 # cadet_wk17 = read_csv("./CSV_Data_Files/2021 NFL Week 17 MA376.csv")
 
-
-####################UPDATE THESE###############################
-current_week = 1 #Set what week it is
-inst.picks = list(week_1) #add in the additional weeks
-cdt.picks = list(cadet_wk1) #add in the additional weeks
-####################END OF UPDATE##############################
-
-weeks = as.list(seq(1:current_week)) #creating a list of each week number
-
-```
-
-```{r read in scores clean data, include=FALSE}
 #reading in scores
 Scores = read_csv(glue::glue("./CSV_Data_Files/NFL_Scores_{current_week}.csv")) 
 
@@ -97,8 +86,20 @@ espn_season = read_csv(glue::glue("./CSV_Data_Files/ESPN_Experts_Season_{current
 
 #Reading in the moneyline odds for each team and cleaning the team names
 odds_wk1 = read_csv(glue::glue("./CSV_Data_Files/Moneyline_Odds_1.csv"))
-#Ceaning Odds Data
-cl_odds = odds_cleaning(odds_wk1)
+odds_wk2 = read_csv(glue::glue("./CSV_Data_Files/Moneyline_Odds_2.csv"))
+
+####################UPDATE THESE###############################
+inst.picks = list(week_1, week_2) #add in the additional weeks
+cdt.picks = list(cadet_wk1, cadet_wk2) #add in the additional weeks
+odds = rbind(odds_wk1, odds_wk2) #add in the additional weeks
+####################END OF UPDATE##############################
+
+weeks = as.list(seq(1:current_week)) #creating a list of each week number
+```
+
+```{r read in scores clean data, include=FALSE}
+#Cleaning Odds Data
+cl_odds = odds_cleaning(odds)
 
 #Cleaning scores data
 Scores = cleaning2(Scores)
@@ -972,6 +973,7 @@ weekly_winnings = map(odds_results, weekly_money)
 
 #total amount we have won/lost this season
 season_money = weekly_winnings %>% 
+  unlist() %>% 
   as.data.frame() %>% 
   rename("Weekly Winnings" = 1) %>% 
   mutate("Season Winnings" = cumsum(`Weekly Winnings`))
@@ -1073,6 +1075,7 @@ c_weekly_winnings = map(c_odds_results, weekly_money)
 
 #total amount we have won/lost this season
 c_season_money = c_weekly_winnings %>% 
+  unlist() %>% 
   as.data.frame() %>% 
   rename("Weekly Winnings" = 1) %>% 
   mutate("Season Winnings" = cumsum(`Weekly Winnings`))
@@ -1174,6 +1177,7 @@ comb_weekly_winnings = map(comb_odds_results, weekly_money)
 
 #total amount we have won/lost this season
 comb_season_money = comb_weekly_winnings %>% 
+  unlist() %>% 
   as.data.frame() %>% 
   rename("Weekly Winnings" = 1) %>% 
   mutate("Season Winnings" = cumsum(`Weekly Winnings`))
