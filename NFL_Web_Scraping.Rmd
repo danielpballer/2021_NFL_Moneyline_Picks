@@ -20,7 +20,7 @@ library(purrr)
 library(rvest)
 
 # Only thing you need to change (add additional week)
-current_week = 2
+current_week = 4
 
 week = as.list(seq(1:current_week)) # List of weeks
 
@@ -215,8 +215,8 @@ read_html("https://www.cbssports.com/nfl/picks/experts/straight-up/17/")%>%
 
 
 ```{r}
-read_html("https://www.espn.com/nfl/picks/_/seasontype/2/week/17")%>%
-    html_nodes(".wrap-cell span+ span")%>%
+read_html("https://www.espn.com/nfl/picks/_/seasontype/2/week/3")%>%
+    html_nodes(".wrap-cell span:nth-child(1)")%>%
     html_text() %>% 
     matrix(ncol = 1, byrow = TRUE) %>%
     as.data.frame()%>%
