@@ -263,7 +263,7 @@ weekly_indiv = pmap(list(inst.picks, winners, weeks), indiv_weekly_pred)
 
 #Combining each week into one dataframe and calculating percentage Correct for this week.  
 full_season = weekly_indiv %>% reduce(full_join, by = "Name") %>% 
-  mutate(Percent = round(pull(.[,ncol(.)]/weekly_games_picked[[length(weekly_games_picked)]]),4)) 
+  mutate(Percent = round(pull(.[,ncol(.)]/weekly_number_of_games[[length(weekly_number_of_games)]]),4)) 
 
 #Creating a dataframe with only the weekly picks
 a = full_season %>% select(starts_with("Week"))
@@ -308,7 +308,7 @@ indiv_disp = full_season %>% add_column(`Weeks Picked` = tot_week) %>%
 
 ```{r individual percentages, include=FALSE}
 #Calculating individual percentages for each week.
-weekly_indiv_percent = map2(weekly_indiv, weekly_games_picked, indiv_percent) %>% reduce(full_join, by = "Name")
+weekly_indiv_percent = map2(weekly_indiv, as.list(weekly_number_of_games), indiv_percent) %>% reduce(full_join, by = "Name")
 
 weekly_indiv_percent_plot = weekly_indiv_percent %>% 
   pivot_longer(cols = starts_with("Week"), names_to = "Week", values_to = "Percent")%>%
@@ -597,7 +597,7 @@ c_weekly_indiv = pmap(list(cdt.picks, winners, weeks), indiv_weekly_pred)
 
 #Combining each week into one dataframe and calculating percentage Correct for this week.  
 c_full_season = c_weekly_indiv %>% reduce(full_join, by = "Name") %>% 
-  mutate(Percent = round(pull(.[,ncol(.)]/weekly_games_picked[[length(weekly_games_picked)]]),4)) 
+  mutate(Percent = round(pull(.[,ncol(.)]/weekly_number_of_games[[length(weekly_number_of_games)]]),4)) 
 
 #Creating a dataframe with only the weekly picks
 c_a = c_full_season %>% select(starts_with("Week"))
@@ -643,7 +643,7 @@ c_indiv_disp = c_full_season %>%
 
 ```{r cdt individual percentages, include=FALSE}
 #Calculating  individual percentages for each week.
-c_weekly_indiv_percent = map2(c_weekly_indiv, weekly_games_picked, indiv_percent) %>% reduce(full_join, by = "Name")
+c_weekly_indiv_percent = map2(c_weekly_indiv, as.list(weekly_number_of_games), indiv_percent) %>% reduce(full_join, by = "Name")
 
 c_weekly_indiv_percent_plot = c_weekly_indiv_percent %>% 
   pivot_longer(cols = starts_with("Week"), names_to = "Week", values_to = "Percent") %>% 
