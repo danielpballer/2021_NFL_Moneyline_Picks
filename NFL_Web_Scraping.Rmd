@@ -20,7 +20,7 @@ library(purrr)
 library(rvest)
 
 # Only thing you need to change (add additional week)
-current_week = 7
+current_week = 8
 
 week = as.list(seq(1:current_week)) # List of weeks
 
