@@ -1284,6 +1284,12 @@ this_seasons_comb_money = comb_group_moneyline_plot_data %>%
   scales::dollar()
 ```
 
+```{r fivethirtyeight}
+inst_538 = map(results, five38) %>% unlist() %>% sum()
+cadet_538 = map(c_results, five38) %>% unlist() %>% sum()
+comb_538 = map(comb_results, five38) %>% unlist() %>% sum()
+```
+
 ```{r pregame, eval=FALSE, include=FALSE}
 #Predictions for the week
 

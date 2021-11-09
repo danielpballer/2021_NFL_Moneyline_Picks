@@ -450,3 +450,14 @@ weekly_odds = function(weeks, results){
 weekly_money = function(odds_results){
   odds_results %>% summarise(sum(Winnings)) %>% pull()
 }
+
+#Function to calculate our score in the football data game (fivethirty8)
+five38 = function(results){
+  results %>% select(Correct, `Correct Percent`) %>% 
+    mutate(`Pick Percent` = case_when(Correct=="No" ~ 1 - `Correct Percent`,
+                                      TRUE ~ `Correct Percent`)) %>% 
+    mutate(win = case_when(Correct=="Yes" ~ 1,
+                           TRUE ~ 0)) %>% 
+    mutate(points = (25-(100*((`Pick Percent`/1)-win)^2))) %>% 
+    summarise(sum(points))
+}
