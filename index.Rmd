@@ -32,6 +32,7 @@ library(htmlwidgets)
 library(mdthemes)
 library(ggtext)
 library(ggnewscale)
+library(DT)
 source("./Functions/functions2.R")
 
 thematic::thematic_rmd(font = "auto")
@@ -1284,6 +1285,13 @@ this_seasons_comb_money = comb_group_moneyline_plot_data %>%
   scales::dollar()
 ```
 
+```{r data for data page}
+inst.data = map2(inst.picks, weeks, disp_data) %>% bind_rows()
+
+cdt.data = map2(cdt.picks, weeks, disp_data) %>% bind_rows()
+```
+
+
 ```{r fivethirtyeight}
 inst_538 = map(results, five38) %>% unlist() %>% sum()
 cadet_538 = map(c_results, five38) %>% unlist() %>% sum()
@@ -1659,7 +1667,7 @@ c_out
 ggplotly(c_indiv_plot)
 ```
 
-Combined Results {data-navmenu="Combined Predictions"}
+Combined Predictions
 ==========================================================================
 
 Sidebar {.sidebar} 
@@ -1808,6 +1816,31 @@ ggplotly(matched_plot) %>%
          margin = list(t = 40))
 ```
 
+Instructor Data {data-navmenu="Instructor Results"}
+==========================================================================
+
+```{r}
+datatable(
+  inst.data, extensions = 'Buttons', options = list(
+    dom = 'Blfrtip',
+    buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+    lengthMenue = list( c(10, 25, 50, 100, -1), c(10, 25, 50, 100, "All") )
+  )
+)
+```
+
+Cadet Data {data-navmenu="Cadet Results"}
+==========================================================================
+
+```{r}
+datatable(
+  cdt.data, extensions = 'Buttons', options = list(
+    dom = 'Blfrtip',
+    buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+    lengthMenue = list( c(10, 25, 50, 100, -1), c(10, 25, 50, 100, "All") )
+  )
+)
+```
 <!--
 Instructor Group Winnings {data-navmenu="Instructor Results"}
 ==========================================================================

@@ -461,3 +461,9 @@ five38 = function(results){
     mutate(points = (25-(100*((`Pick Percent`/1)-win)^2))) %>% 
     summarise(sum(points))
 }
+
+#Function to create a display dataset for showing on the dashboard
+disp_data = function(picks, weeks){
+  picks %>% mutate(Week = weeks, .after = Email) %>% 
+    select(-c(ID, `Start time`, `Completion time`, `Email`))
+}
