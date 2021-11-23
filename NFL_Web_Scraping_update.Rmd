@@ -21,7 +21,7 @@ library(purrr)
 library(rvest)
 
 # Only thing you need to change (update current week)
-current_week = 10
+current_week = 11
 
 ################################ Scraping Scores ##############################
 
@@ -177,7 +177,7 @@ read_html("https://www.sportsline.com/nfl/odds/money-line/")%>%
     mutate(V2 = as.numeric(V2)) %>% 
     rename(`team` = V1, `odds` = V2) %>% 
     add_column(week = week[[length(week)]]) %>% 
-    write_csv(glue::glue("./CSV_Data_Files/Moneyline_Odds_{length(week)}.csv"))
+    write_csv(glue::glue("./CSV_Data_Files/Moneyline_Odds_{length(week)+1}.csv"))
 ```
 
 
