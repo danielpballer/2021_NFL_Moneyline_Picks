@@ -39,7 +39,7 @@ thematic::thematic_rmd(font = "auto")
 ```
 
 ```{r Reading in our picks files, include=FALSE}
-current_week = 12 #Set what week it is
+current_week = 13 #Set what week it is
 week_1 = read_csv("./CSV_Data_Files/2021 NFL Week 1.csv")
 week_2 = read_csv("./CSV_Data_Files/2021 NFL Week 2.csv")
 week_3 = read_csv("./CSV_Data_Files/2021 NFL Week 3.csv")
@@ -52,7 +52,7 @@ week_9 = read_csv("./CSV_Data_Files/2021 NFL Week 9.csv")
 week_10 = read_csv("./CSV_Data_Files/2021 NFL Week 10.csv")
 week_11 = read_csv("./CSV_Data_Files/2021 NFL Week 11.csv")
 week_12 = read_csv("./CSV_Data_Files/2021 NFL Week 12.csv")
-# week_13 = read_csv("./CSV_Data_Files/2021 NFL Week 13.csv")
+week_13 = read_csv("./CSV_Data_Files/2021 NFL Week 13.csv")
 # week_14 = read_csv("./CSV_Data_Files/2021 NFL Week 14.csv")
 # week_15 = read_csv("./CSV_Data_Files/2021 NFL Week 15.csv")
 # week_16 = read_csv("./CSV_Data_Files/2021 NFL Week 16.csv")
@@ -69,7 +69,7 @@ cadet_wk9 = read_csv("./CSV_Data_Files/2021 NFL Week 9 MA376.csv")
 cadet_wk10 = read_csv("./CSV_Data_Files/2021 NFL Week 10 MA376.csv")
 cadet_wk11 = read_csv("./CSV_Data_Files/2021 NFL Week 11 MA376.csv")
 cadet_wk12 = read_csv("./CSV_Data_Files/2021 NFL Week 12 MA376.csv")
-# cadet_wk13 = read_csv("./CSV_Data_Files/2021 NFL Week 13 MA376.csv")
+cadet_wk13 = read_csv("./CSV_Data_Files/2021 NFL Week 13 MA376.csv")
 # cadet_wk14 = read_csv("./CSV_Data_Files/2021 NFL Week 14 MA376.csv")
 # cadet_wk15 = read_csv("./CSV_Data_Files/2021 NFL Week 15 MA376.csv")
 # cadet_wk16 = read_csv("./CSV_Data_Files/2021 NFL Week 16 MA376.csv")
@@ -99,15 +99,16 @@ odds_wk9 = read_csv(glue::glue("./CSV_Data_Files/Moneyline_Odds_9.csv"))
 odds_wk10 = read_csv(glue::glue("./CSV_Data_Files/Moneyline_Odds_10.csv"))
 odds_wk11 = read_csv(glue::glue("./CSV_Data_Files/Moneyline_Odds_11.csv"))
 odds_wk12 = read_csv(glue::glue("./CSV_Data_Files/Moneyline_Odds_12.csv"))
+odds_wk13 = read_csv(glue::glue("./CSV_Data_Files/Moneyline_Odds_13.csv"))
 
 ####################UPDATE THESE###############################
 inst.picks = list(week_1, week_2, week_3, week_4, week_5, week_6, week_7,
-                  week_8, week_9, week_10, week_11, week_12) #add in the additional weeks
+                  week_8, week_9, week_10, week_11, week_12, week_13) #add in the additional weeks
 cdt.picks = list(cadet_wk1, cadet_wk2, cadet_wk3, cadet_wk4, cadet_wk5, 
                  cadet_wk6, cadet_wk7, cadet_wk8, cadet_wk9, cadet_wk10, cadet_wk11,
-                 cadet_wk12) #add in the additional weeks
+                 cadet_wk12, cadet_wk13) #add in the additional weeks
 odds = rbind(odds_wk1, odds_wk2, odds_wk3, odds_wk4, odds_wk5, odds_wk6, odds_wk7,
-             odds_wk8, odds_wk9, odds_wk10, odds_wk11, odds_wk12) #add in the additional weeks
+             odds_wk8, odds_wk9, odds_wk10, odds_wk11, odds_wk12, odds_wk13) #add in the additional weeks
 ####################END OF UPDATE##############################
 
 weeks = as.list(seq(1:current_week)) #creating a list of each week number
