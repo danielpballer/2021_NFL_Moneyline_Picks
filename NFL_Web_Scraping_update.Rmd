@@ -169,6 +169,8 @@ week%>%
 
 #Scraping Moneyline odds Ceasars Sports Book
 ```{r}
+week_odds = current_week+1
+
 read_html("https://www.sportsline.com/nfl/odds/money-line/")%>%
     html_nodes("td:nth-child(4) .primary , h4")%>%
     html_text() %>% 
@@ -176,8 +178,8 @@ read_html("https://www.sportsline.com/nfl/odds/money-line/")%>%
     as.data.frame() %>% 
     mutate(V2 = as.numeric(V2)) %>% 
     rename(`team` = V1, `odds` = V2) %>% 
-    add_column(week = week[[length(week)]]) %>% 
-    write_csv(glue::glue("./CSV_Data_Files/Moneyline_Odds_{length(week)+1}.csv"))
+    add_column(week = week_odds) %>% 
+    write_csv(glue::glue("./CSV_Data_Files/Moneyline_Odds_{week_odds}.csv"))
 ```
 
 
