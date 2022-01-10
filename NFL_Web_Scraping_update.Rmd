@@ -21,7 +21,7 @@ library(purrr)
 library(rvest)
 
 # Only thing you need to change (update current week)
-current_week = 17
+current_week = 18
 
 ################################ Scraping Scores ##############################
 
