@@ -1,0 +1,337 @@
+---
+title: "NFL_Web_Scraping"
+author: "Daniel Baller"
+date: "AUG 25, 2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## NFL Scores from cbssports.com
+
+```{r}
+#Loading Packages
+library(tidyverse)
+library(stringr)
+library(XML)
+library(xml2)
+library(purrr)
+library(rvest)
+
+# Only thing you need to change (update current week)
+reg_season_weeks = 18
+current_week = 19
+
+################################ Scraping Scores ##############################
+
+week = as.list(seq(1:reg_season_weeks)) # List of weeks
+week_post = as.list(seq(from = 19, to = current_week, by = 1))
+
+url = "https://www.cbssports.com/nfl/schedule/2021/regular/"  #base URL regular season
+url_post = "https://www.cbssports.com/nfl/schedule/2021/postseason/"  #base URL post season
+
+#Creating the list of regular season pages
+list_of_pages = function(x){
+  str_c(url,x)
+}
+
+#Creating the list of post eason pages
+list_of_pages_post = function(x){
+  str_c(url_post,x)
+}
+
+scores = function(week, url){
+  
+  stats = url%>%
+    read_html()%>%
+    html_nodes(".CellGame a")%>%
+    html_text() %>% 
+    matrix(ncol = 1, byrow = TRUE) %>%
+    as.data.frame()%>%
+    rename(`Score` = V1) %>% 
+    separate(Score, sep = " ", into = c("TM1","Score1", "vs", "TM2", "Score2")) %>% 
+    mutate(week = week)
+}
+
+reg = week%>%
+  map(list_of_pages) %>% 
+  map2(week,.,scores)%>%
+  bind_rows()
+
+post = week_post%>%
+  map(list_of_pages_post) %>% 
+  map2(week_post,.,scores)%>%
+  bind_rows()
+
+
+bind_rows(reg, post) %>%
+  write_csv(glue::glue("./CSV_Data_Files/NFL_Scores_{current_week}.csv"))
+
+##################### Scraping CBS Weekly Expert Predictions #########################
+cbs_week_list = as.list(seq(1:current_week)) # List of weeks
+
+url_cbs = "https://www.cbssports.com/nfl/picks/experts/straight-up/"  #base URL
+
+list_of_pages_cbs = function(x){
+  str_c(url_cbs,x)
+}
+
+cbs_week = function(week, url_cbs){
+  
+  stats = url_cbs%>%
+    read_html()%>%
+    html_nodes(".TableExpertPicks-weekRecords")%>%
+    html_text() %>% 
+    matrix(ncol = 1, byrow = TRUE) %>%
+    as.data.frame()%>%
+    rename(`Record` = V1) %>% 
+    str_extract_all("\\d{1,2}-\\d{1,2}-\\d{1}") %>% 
+    unlist() %>% 
+    str_split_fixed("-", n=3) %>% 
+    as.data.frame() %>% 
+    rename(`Correct` = V1, `Wrong` = V2, `Tie` = V3)%>% 
+    mutate(Correct = as.numeric(Correct), Wrong = as.numeric(Wrong), Tie = as.numeric(Tie)) %>% 
+    mutate(Percent = Correct/(Correct+Wrong+Tie)) %>% 
+    mutate(week = week)
+}
+
+cbs_week_list %>%
+  map(list_of_pages_cbs) %>% 
+  map2(cbs_week_list,.,cbs_week)%>%
+  bind_rows() %>% 
+  write_csv(glue::glue("./CSV_Data_Files/CBS_Experts_{current_week}.csv"))
+
+###################### Scraping CBS Season Expert Predictions #########################
+cbs_season = function(week, url_cbs){
+  
+  stats = url_cbs%>%
+    read_html()%>%
+    html_nodes(".TableExpertPicks-overallRecords")%>%
+    html_text() %>% 
+    matrix(ncol = 1, byrow = TRUE) %>%
+    as.data.frame()%>%
+    rename(`Record` = V1) %>% 
+    str_extract_all("\\d{1,3}-\\d{1,3}-\\d{1}") %>% 
+    unlist() %>% 
+    str_split_fixed("-", n=3) %>% 
+    as.data.frame() %>% 
+    rename(`Correct` = V1, `Wrong` = V2, `Tie` = V3)%>% 
+    mutate(Correct = as.numeric(Correct), Wrong = as.numeric(Wrong), Tie = as.numeric(Tie)) %>% 
+    mutate(Percent = Correct/(Correct+Wrong+Tie)) %>% 
+    mutate(week = week)
+}
+
+cbs_week_list%>%
+  map(list_of_pages_cbs) %>% 
+  map2(cbs_week_list,.,cbs_season)%>%
+  bind_rows() %>% 
+  write_csv(glue::glue("./CSV_Data_Files/CBS_Experts_Season_{current_week}.csv"))
+
+#################### Scraping ESPN Weekly Expert Predictions #########################
+espn_post_week = as.list(seq(from = 1, to = length(week_post), by = 1)) # List of weeks
+
+url_espn = "https://www.espn.com/nfl/picks/_/seasontype/2/week/"  #base URL regular season
+url_espn_post = "https://www.espn.com/nfl/picks/_/seasontype/3/week/"  #base URL post season
+
+# creating a list of pages for the regular season
+list_of_pages_espn = function(x){
+  str_c(url_espn,x)
+}
+
+# creating a list of pages for the post season
+list_of_pages_espn_post = function(x){
+  str_c(url_espn_post,x)
+}
+
+espn_week = function(week, url_espn){
+  
+  stats = url_espn%>%
+    read_html()%>%
+    html_nodes(".wrap-cell span:nth-child(1)")%>%
+    html_text() %>% 
+    matrix(ncol = 1, byrow = TRUE) %>%
+    as.data.frame()%>%
+    rename(`Record` = V1) %>% 
+    mutate(Correct = str_extract(Record, "(\\d)+(?=-)")) %>% 
+    mutate(Wrong = str_extract(Record, "(?<=-)(\\d)+")) %>% 
+    mutate(Correct = as.numeric(Correct), Wrong = as.numeric(Wrong)) %>% 
+    mutate(Percent = Correct/(Correct+Wrong)) %>% 
+    filter(Percent!="NaN") %>% 
+    mutate(week = week)
+}
+
+espn_week_post = function(week_post, url_espn){
+  
+  stats = url_espn%>%
+    read_html()%>%
+    html_nodes(".wrap-cell span:nth-child(1)")%>%
+    html_text() %>% 
+    matrix(ncol = 1, byrow = TRUE) %>%
+    as.data.frame()%>%
+    rename(`Record` = V1) %>% 
+    mutate(Correct = str_extract(Record, "(\\d)+(?=-)")) %>% 
+    mutate(Wrong = str_extract(Record, "(?<=-)(\\d)+")) %>% 
+    mutate(Correct = as.numeric(Correct), Wrong = as.numeric(Wrong)) %>% 
+    mutate(Percent = Correct/(Correct+Wrong)) %>% 
+    filter(Percent!="NaN") %>% 
+    mutate(week = week_post)
+}
+
+#getting espn records season
+reg_espn_week = week%>%
+  map(list_of_pages_espn) %>% 
+  map2(week,.,espn_week) %>% 
+  bind_rows()
+
+#getting espn records post season
+post_espn_week = espn_post_week%>%
+  map(list_of_pages_espn_post) %>% 
+  map2(week_post,.,espn_week_post) %>% 
+  bind_rows()
+
+bind_rows(reg_espn_week, post_espn_week) %>% 
+  write_csv(glue::glue("./CSV_Data_Files/ESPN_Experts_{current_week}.csv"))
+
+################## Scraping ESPN Season Expert Predictions #########################
+espn_season = function(week, url_espn){
+  
+  stats = url_espn%>%
+    read_html()%>%
+    html_nodes(".wrap-cell span+ span")%>%
+    html_text() %>% 
+    matrix(ncol = 1, byrow = TRUE) %>%
+    as.data.frame()%>%
+    rename(`Record` = V1) %>% 
+    mutate(Correct = str_extract(Record, "(\\d)+(?=-)")) %>% 
+    mutate(Wrong = str_extract(Record, "(?<=-)(\\d)+")) %>% 
+    mutate(Correct = as.numeric(Correct), Wrong = as.numeric(Wrong)) %>% 
+    mutate(Percent = Correct/(Correct+Wrong)) %>% 
+    filter(Percent!="NaN") %>% 
+    mutate(week = week)
+}
+
+espn_season_post = function(week_post, url_espn){
+  
+  stats = url_espn%>%
+    read_html()%>%
+    html_nodes(".wrap-cell span+ span")%>%
+    html_text() %>% 
+    matrix(ncol = 1, byrow = TRUE) %>%
+    as.data.frame()%>%
+    rename(`Record` = V1) %>% 
+    mutate(Correct = str_extract(Record, "(\\d)+(?=-)")) %>% 
+    mutate(Wrong = str_extract(Record, "(?<=-)(\\d)+")) %>% 
+    mutate(Correct = as.numeric(Correct), Wrong = as.numeric(Wrong)) %>% 
+    mutate(Percent = Correct/(Correct+Wrong)) %>% 
+    filter(Percent!="NaN") %>% 
+    mutate(week = week_post)
+}
+
+reg_espn_season = week%>%
+  map(list_of_pages_espn) %>% 
+  map2(week,.,espn_season) %>% 
+  bind_rows()
+
+
+post_espn_season = espn_post_week%>%
+  map(list_of_pages_espn_post) %>% 
+  map2(week_post,.,espn_season_post) %>% 
+  bind_rows() 
+
+reg_18 = reg_espn_season %>% filter(week==18) 
+last_week = reg_18
+all_espn_season = reg_espn_season
+
+for (i in 19:current_week){
+ this_week = post_espn_season %>% filter(week == i)
+ 
+ Correct = last_week$Correct+this_week$Correct
+ Wrong = last_week$Wrong+this_week$Wrong
+ Percent = Correct/(Wrong+Correct)
+ Record = paste(Correct, Wrong, sep = "-")
+ week_espn = rep(i, 11)
+ 
+ this_week_end = bind_cols("Record" = Record, "Correct" = Correct, "Wrong" = Wrong, 
+                           "Percent" = Percent, "week" = week_espn)
+ 
+ all_espn_season = bind_rows(all_espn_season, this_week_end)
+ 
+ last_week = all_espn_season %>% filter(week==max(week))
+}
+
+all_espn_season %>% 
+  write_csv(glue::glue("./CSV_Data_Files/ESPN_Experts_Season_{current_week}.csv"))
+```
+
+################## STOP UPDATE CURRENT WEEK TO NEXT WEEK FIRST ########################
+
+#Scraping Moneyline odds Ceasars Sports Book
+```{r}
+week_odds = current_week+1
+
+read_html("https://www.sportsline.com/nfl/odds/money-line/")%>%
+    html_nodes("td:nth-child(4) .primary , h4")%>%
+    html_text() %>% 
+    matrix(ncol = 2, byrow = TRUE) %>%
+    as.data.frame() %>% 
+    mutate(V2 = as.numeric(V2)) %>% 
+    rename(`team` = V1, `odds` = V2) %>% 
+    add_column(week = week_odds) %>% 
+    write_csv(glue::glue("./CSV_Data_Files/Moneyline_Odds_{week_odds}.csv"))
+```
+
+
+
+########################## Sandbox
+```{r}
+read_html("https://www.sportsline.com/nfl/odds/money-line/")%>%
+    html_nodes("td:nth-child(4) .primary , h4")%>%
+    html_text() %>% 
+    matrix(ncol = 4, byrow = TRUE) %>%
+    as.data.frame() %>% 
+    mutate(V2 = as.numeric(V2), V4 = as.numeric(V4)) %>% 
+    rename(`away_team` = V1, `away_odds` = V2, `home_team` = V3, `home_odds` = V4) %>% 
+    add_column(week = week[[length(week)]])
+ 
+
+read_html("https://www.cbssports.com/nfl/picks/experts/straight-up/17/")%>%
+    html_nodes(".TableExpertPicks-overallRecords")%>%
+    html_text() %>% 
+    matrix(ncol = 1, byrow = TRUE) %>%
+    as.data.frame()%>%
+    rename(`Record` = V1) %>% 
+    str_extract_all("\\d{1,3}-\\d{1,3}-\\d{1}") %>% 
+    unlist() %>% 
+    str_split_fixed("-", n=3) %>% 
+    as.data.frame() %>% 
+    rename(`Correct` = V1, `Wrong` = V2, `Tie` = V3)%>% 
+    mutate(Correct = as.numeric(Correct), Wrong = as.numeric(Wrong), Tie = as.numeric(Tie)) %>% 
+    mutate(Percent = Correct/(Correct+Wrong+Tie))
+```
+
+
+```{r}
+read_html("https://www.espn.com/nfl/picks/_/seasontype/2/week/3")%>%
+    html_nodes(".wrap-cell span:nth-child(1)")%>%
+    html_text() %>% 
+    matrix(ncol = 1, byrow = TRUE) %>%
+    as.data.frame()%>%
+    rename(`Record` = V1) %>% 
+    mutate(Correct = str_extract(Record, "(\\d)+(?=-)")) %>% 
+    mutate(Wrong = str_extract(Record, "(?<=-)(\\d)+")) %>% 
+    mutate(Correct = as.numeric(Correct), Wrong = as.numeric(Wrong)) %>% 
+    mutate(Percent = Correct/(Correct+Wrong)) %>% 
+    filter(Percent!="NaN")
+```
+
+```{r}
+read_html("https://www.cbssports.com/nfl/schedule/2020/regular/1/")%>%
+    html_nodes(".CellGame a")%>%
+    html_text() %>% 
+    matrix(ncol = 1, byrow = TRUE) %>%
+    as.data.frame()%>%
+    rename(`Score` = V1) %>% 
+    separate(Score, sep = " ", into = c("TM1","Score1", "vs", "TM2", "Score2"))
+```
