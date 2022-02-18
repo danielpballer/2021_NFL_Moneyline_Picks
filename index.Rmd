@@ -643,7 +643,6 @@ c_weekly_indiv = pmap(list(cdt.picks, winners, weeks), indiv_weekly_pred)
 #Combining each week into one dataframe and calculating percentage Correct for this week.  
 c_full_season = c_weekly_indiv %>% reduce(full_join, by = "Name") %>% 
   mutate(Percent = round(pull(.[,ncol(.)]/weekly_number_of_games[[length(weekly_number_of_games)]]),4)) 
-
 #Creating a dataframe with only the weekly picks
 c_a = c_full_season %>% select(starts_with("Week"))
 
