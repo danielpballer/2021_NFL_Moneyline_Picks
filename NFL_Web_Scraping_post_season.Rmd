@@ -22,7 +22,7 @@ library(rvest)
 
 # Only thing you need to change (update current week)
 reg_season_weeks = 18
-current_week = 19
+current_week = 22
 
 ################################ Scraping Scores ##############################
 

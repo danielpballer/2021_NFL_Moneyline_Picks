@@ -40,7 +40,7 @@ thematic::thematic_rmd(font = "auto")
 ```
 
 ```{r Reading in our picks files, include=FALSE}
-current_week = 21 #Set what week it is
+current_week = 22 #Set what week it is
 week_1 = read_csv("./CSV_Data_Files/2021 NFL Week 1.csv")
 week_2 = read_csv("./CSV_Data_Files/2021 NFL Week 2.csv")
 week_3 = read_csv("./CSV_Data_Files/2021 NFL Week 3.csv")
@@ -62,6 +62,7 @@ week_18 = read_csv("./CSV_Data_Files/2021 NFL Week 18.csv")
 week_19 = read_csv("./CSV_Data_Files/2021 NFL Wild Card.csv")
 week_20 = read_csv("./CSV_Data_Files/2021 NFL Divisional Round.csv")
 week_21 = read_csv("./CSV_Data_Files/2021 NFL Conference Round.csv")
+week_22 = read_csv("./CSV_Data_Files/2021 NFL Super Bowl.csv")
 cadet_wk1 = read_csv("./CSV_Data_Files/2021 NFL Week 1 MA376.csv")
 cadet_wk2 = read_csv("./CSV_Data_Files/2021 NFL Week 2 MA376.csv")
 cadet_wk3 = read_csv("./CSV_Data_Files/2021 NFL Week 3 MA376.csv")
@@ -83,6 +84,7 @@ cadet_wk18 = read_csv("./CSV_Data_Files/2021 NFL Week 18 MA376.csv")
 cadet_wk19 = read_csv("./CSV_Data_Files/2021 NFL Wild Card MA376.csv")
 cadet_wk20 = read_csv("./CSV_Data_Files/2021 NFL Divisional Round MA376.csv")
 cadet_wk21 = read_csv("./CSV_Data_Files/2021 NFL Conference Round MA376.csv")
+cadet_wk22 = read_csv("./CSV_Data_Files/2021 NFL Super Bowl MA376.csv")
 
 #reading in scores
 Scores = read_csv(glue::glue("./CSV_Data_Files/NFL_Scores_{current_week}.csv")) 
@@ -120,21 +122,22 @@ odds_wk18 = read_csv(glue::glue("./CSV_Data_Files/Moneyline_Odds_18.csv"))
 odds_wk19 = read_csv(glue::glue("./CSV_Data_Files/Moneyline_Odds_19.csv"))
 odds_wk20 = read_csv(glue::glue("./CSV_Data_Files/Moneyline_Odds_20.csv"))
 odds_wk21 = read_csv(glue::glue("./CSV_Data_Files/Moneyline_Odds_21.csv"))
+odds_wk22 = read_csv(glue::glue("./CSV_Data_Files/Moneyline_Odds_22.csv"))
 
 ####################UPDATE THESE###############################
 inst.picks = list(week_1, week_2, week_3, week_4, week_5, week_6, week_7,
                   week_8, week_9, week_10, week_11, week_12, week_13, week_14, 
                   week_15, week_16, week_17, week_18, week_19, week_20, 
-                  week_21) #add in the additional weeks
+                  week_21, week_22) #add in the additional weeks
 cdt.picks = list(cadet_wk1, cadet_wk2, cadet_wk3, cadet_wk4, cadet_wk5, 
                  cadet_wk6, cadet_wk7, cadet_wk8, cadet_wk9, cadet_wk10, cadet_wk11,
                  cadet_wk12, cadet_wk13, cadet_wk14, cadet_wk15, cadet_wk16,
                  cadet_wk17, cadet_wk18, cadet_wk19, cadet_wk20, 
-                 cadet_wk21) #add in the additional weeks
+                 cadet_wk21, cadet_wk22) #add in the additional weeks
 odds = rbind(odds_wk1, odds_wk2, odds_wk3, odds_wk4, odds_wk5, odds_wk6, odds_wk7,
              odds_wk8, odds_wk9, odds_wk10, odds_wk11, odds_wk12, odds_wk13,
              odds_wk14, odds_wk15, odds_wk16, odds_wk17, odds_wk18, odds_wk19, 
-             odds_wk20, odds_wk21) #add in the additional weeks
+             odds_wk20, odds_wk21, odds_wk22) #add in the additional weeks
 ####################END OF UPDATE##############################
 
 weeks = as.list(seq(1:current_week)) #creating a list of each week number
@@ -211,6 +214,9 @@ weekly_games_picked = map2(weekly_group_correct, weekly_number_of_games, weekly_
 
 #Calculating the number of correct picks for each week
 weekly_group_correct_picks = map(weekly_group_correct, weekly_group_correct_picks_fn)
+
+##### Remove this line before next season 
+weekly_group_correct_picks[[22]]=0
 
 #Calculating weekly win percentage
 weekly_win_percentage = map2(weekly_group_correct_picks, weekly_games_picked, weekly_win_percentage_fn)
@@ -569,6 +575,9 @@ c_weekly_games_picked = map2(c_weekly_group_correct, weekly_number_of_games, wee
 #Calculating the number of correct picks for each week
 c_weekly_group_correct_picks = map(c_weekly_group_correct, weekly_group_correct_picks_fn)
 
+######### Remove this line before next season.
+c_weekly_group_correct_picks[[22]]=0
+
 #Calculating weekly win percentage
 c_weekly_win_percentage = map2(c_weekly_group_correct_picks, c_weekly_games_picked, weekly_win_percentage_fn)
 
@@ -870,6 +879,9 @@ comb_weekly_games_picked = map2(comb_weekly_group_correct, weekly_number_of_game
 #Calculating the number of correct picks for each week
 comb_weekly_group_correct_picks = map(comb_weekly_group_correct, weekly_group_correct_picks_fn)
 
+####### Remove this line before next season
+comb_weekly_group_correct_picks[[22]]=0
+
 #Calculating weekly win percentage
 comb_weekly_win_percentage = map2(comb_weekly_group_correct_picks, comb_weekly_games_picked, weekly_win_percentage_fn)
 
@@ -962,6 +974,9 @@ matched_table = matched[[length(matched)]] %>%
 
 ```{r include=FALSE}
 matched_per = map(matched, matched_percent_fn) %>% unlist() %>% as.data.frame() 
+
+##### Remove this line before next year
+matched_per[22,1] = 0
 
 matched_season_percent_for_plotting = matched_per %>% 
   mutate(`Win Percentage` = matched_per[,1]) %>% 
